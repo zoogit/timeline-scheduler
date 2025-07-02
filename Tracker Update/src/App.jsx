@@ -37,6 +37,7 @@ const TEAMS = {
     'Gabrielle',
     'Jane',
     'Melanie',
+    'Nousha',
     'Paulina',
     'Rose',
     'Stephanie',
