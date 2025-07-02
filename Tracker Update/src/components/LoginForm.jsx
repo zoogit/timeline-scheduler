@@ -3,6 +3,7 @@
 
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
+import HoulihanLokeyLogo from "../assets/Houlihan_Lokey_logo.png";
 
 const LoginForm = () => {
   const [isSignUp, setIsSignUp] = useState(false);
