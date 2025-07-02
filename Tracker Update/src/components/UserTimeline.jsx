@@ -30,6 +30,7 @@ const SHIFT_WINDOWS = {
   Paulina: { start: 16, end: 34 }, // 8am-4pm PST
   Rose: { start: 16, end: 34 }, // 8am-4pm PST
   Toby: { start: 16, end: 34 }, // 8am-4pm PST
+  Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
   // Stephanie, Susan, Victoria: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
   Stephanie: { start: 12, end: 30 }, // 6:30am-3pm PST
