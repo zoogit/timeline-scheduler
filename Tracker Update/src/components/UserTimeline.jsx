@@ -22,20 +22,20 @@ const SHIFT_WINDOWS = {
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
   // Ade, Claire, Gabrielle, Jane, Melanie, Paulina, Rose, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
-  Ade: { start: 16, end: 34 }, // 8am-4pm PST
-  Claire: { start: 16, end: 34 }, // 8am-4pm PST
+  Ade: { start: 16, end: 32 }, // 8am-4pm PST
+  Claire: { start: 16, end: 32 }, // 8am-4pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
   Jane: { start: 16, end: 34 }, // 8am-4pm PST
-  Melanie: { start: 16, end: 34 }, // 8am-4pm PST
+  Melanie: { start: 16, end: 32 }, // 8am-4pm PST
   Paulina: { start: 16, end: 34 }, // 8am-4pm PST
   Rose: { start: 16, end: 34 }, // 8am-4pm PST
-  Toby: { start: 16, end: 34 }, // 8am-4pm PST
+  Toby: { start: 16, end: 32 }, // 8am-4pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
   // Stephanie, Susan, Victoria: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
   Stephanie: { start: 12, end: 30 }, // 6:30am-3pm PST
   Susan: { start: 12, end: 30 }, // 6:30am-3pm PST
-  Victoria: { start: 12, end: 30 }, // 6:30am-3pm PST
+  Victoria: { start: 12, end: 32 }, // 6:30am-3pm PST
 
   // Night Team - Convert GMT times to PST (GMT - 8 hours)
   // Ashley: 9PM GMT-6AM GMT = 1PM PST-10PM PST (26-44)
