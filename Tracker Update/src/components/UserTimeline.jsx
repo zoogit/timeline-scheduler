@@ -35,7 +35,7 @@ const SHIFT_WINDOWS = {
   // Stephanie, Susan, Victoria: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
   Stephanie: { start: 12, end: 30 }, // 6:30am-3pm PST
   Susan: { start: 12, end: 30 }, // 6:30am-3pm PST
-  Victoria: { start: 12, end: 32 }, // 6:30am-3pm PST
+  Victoria: { start: 14, end: 32 }, // 6:30am-3pm PST
 
   // Night Team - Convert GMT times to PST (GMT - 8 hours)
   // Ashley: 9PM GMT-6AM GMT = 1PM PST-10PM PST (26-44)
