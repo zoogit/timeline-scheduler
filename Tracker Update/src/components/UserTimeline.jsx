@@ -65,7 +65,7 @@ const SHIFT_WINDOWS = {
   Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Sophia: 12AM-7:30AM PST (0-15) - Overnight coverage
-  Sophia: { start: 0, end: 15 }, // 12am-7:30am PST
+  Sophia: { start: 0, end: 16 }, // 12am-7:30am PST
 
   // Jessica: 8AM-4PM PST (16-32) - Standard business hours
   Jessica: { start: 14, end: 32 }, // 8am-4pm PST
