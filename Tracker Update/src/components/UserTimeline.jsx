@@ -56,7 +56,7 @@ const SHIFT_WINDOWS = {
 
   // ✅ UPDATED: SP Team - More reasonable working hours
   // Beth: 8AM-4PM PST (16-32) - Standard business hours
-  Beth: { start: 16, end: 32 }, // 8am-4pm PST
+  Beth: { start: 14, end: 32 }, // 8am-4pm PST
 
   // James: 1AM-8:30AM PST (2-17) - Early morning coverage
   James: { start: 2, end: 17 }, // 1am-8:30am PST
@@ -68,7 +68,7 @@ const SHIFT_WINDOWS = {
   Sophia: { start: 0, end: 15 }, // 12am-7:30am PST
 
   // Jessica: 8AM-4PM PST (16-32) - Standard business hours
-  Jessica: { start: 16, end: 32 }, // 8am-4pm PST
+  Jessica: { start: 14, end: 32 }, // 8am-4pm PST
 };
 
 const ACCENT_COLORS = [
