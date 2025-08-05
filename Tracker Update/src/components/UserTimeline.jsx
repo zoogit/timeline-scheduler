@@ -45,7 +45,7 @@ const SHIFT_WINDOWS = {
   Doue: { start: 24, end: 41 }, // 1pm-8:30pm PST
 
   // Shaida: 9PM GMT-3:30AM GMT = 1PM PST-7:30PM PST (26-39)
-  Shaida: { start: 22, end: 39 }, // 1pm-7:30pm PST
+  Shaida: { start: 23, end: 39 }, // 1pm-7:30pm PST
 
   // Marie: 9:30PM GMT-6AM GMT = 1:30PM PST-10PM PST (27-44)
   Marie: { start: 27, end: 44 }, // 1:30pm-10pm PST
@@ -1579,3 +1579,4 @@ function UserTimeline({
 }
 
 export default UserTimeline;
+
