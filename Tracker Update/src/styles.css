@@ -338,18 +338,64 @@ estimate-cancel-btn {
   }
 }
 
-.user-timezone {
-  color: #6c757d !important;
-  margin-left: 8px;
-  padding: 2px 6px;
-  background: rgba(108, 117, 125, 0.1);
-  border-radius: 3px;
+/* ✅ UPDATED: Individual timezone button colors with EST support */
+.timezone-btn.pst {
+  background: #9ca3af; /* Gray for inactive */
 }
 
-.user-timezone:hover {
-  background: rgba(108, 117, 125, 0.2);
+.timezone-btn.pst.active {
+  background: #3b82f6; /* Blue for active PST */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
+.timezone-btn.cst {
+  background: #9ca3af; /* Gray for inactive */
+}
+
+.timezone-btn.cst.active {
+  background: #10b981; /* Green for active CST */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.timezone-btn.est {
+  background: #9ca3af; /* Gray for inactive */
+}
+
+.timezone-btn.est.active {
+  background: #e91e63; /* Magenta for active EST */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.timezone-btn.gmt {
+  background: #9ca3af; /* Gray for inactive */
+}
+
+.timezone-btn.gmt.active {
+  background: #f59e0b; /* Orange-yellow for active GMT */
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* ✅ UPDATED: Hover effects for all timezones including EST */
+.timezone-btn:hover:not(.active) {
+  background: #6b7280; /* Darker gray on hover when inactive */
+  transform: translateY(-1px);
+}
+
+.timezone-btn.pst:hover.active {
+  background: #2563eb; /* Darker blue on hover when active */
+}
+
+.timezone-btn.cst:hover.active {
+  background: #059669; /* Darker green on hover when active */
+}
+
+.timezone-btn.est:hover.active {
+  background: #c2185b; /* Darker magenta on hover when active */
+}
+
+.timezone-btn.gmt:hover.active {
+  background: #d97706; /* Darker orange-yellow on hover when active */
+}
 /* App Header */
 .app-header {
   display: flex;
@@ -2115,3 +2161,4 @@ body {
   cursor: pointer;
   font-weight: bold;
   transition: background-color 0.2s ease;
+
