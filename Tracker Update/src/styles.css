@@ -1,4 +1,97 @@
-estimate-cancel-btn {
+/* ===== TIMEZONE CONTROLS STYLING ===== */
+
+.timezone-toggle-enhanced {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 16px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.timezone-label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 14px;
+}
+
+.timezone-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+.timezone-btn {
+  padding: 6px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  color: #495057;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.timezone-btn:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.timezone-btn.active {
+  background: #0267ff;
+  color: white;
+  border-color: #0267ff;
+  box-shadow: 0 2px 4px rgba(2, 103, 255, 0.3);
+}
+
+.timezone-btn.active:hover {
+  background: #0056d3;
+  border-color: #0056d3;
+}
+
+/* Specific timezone color themes */
+.timezone-btn.pst.active {
+  background: #0267ff;
+  border-color: #0267ff;
+}
+
+.timezone-btn.cst.active {
+  background: #28a745;
+  border-color: #28a745;
+}
+
+.timezone-btn.est.active {
+  background: #dc3545;
+  border-color: #dc3545;
+}
+
+.timezone-btn.gmt.active {
+  background: #6f42c1;
+  border-color: #6f42c1;
+}
+
+/* ===== TIMELINE CONTROLS HEADER ===== */
+
+.timeline-controls-header {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 15px;
+  padding: 10px 20px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+/* ===== ESTIMATE EDITOR STYLES ===== */
+
+.estimate-cancel-btn {
   background: #ef4444;
   color: white;
 }
@@ -47,11 +140,6 @@ estimate-cancel-btn {
   color: #ffffff !important;
 }
 
-.estimate-value:hover {
-  font-weight: 600;
-  font-size: 14px;
-}
-
 .estimate-edit-hint {
   font-size: 10px;
   color: #fefefe;
@@ -68,7 +156,77 @@ estimate-cancel-btn {
   opacity: 0;
 }
 
-/* Ticket controls layout */
+.estimate-editor-container {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+  flex-shrink: 0;
+}
+
+.estimate-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.estimate-input {
+  width: 50px;
+  padding: 4px 6px;
+  border: 2px solid #0267ff;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  background: white;
+  outline: none;
+  transition: border-color 0.2s ease;
+  color: #000000;
+}
+
+.estimate-input:focus {
+  border-color: #0056d3;
+  box-shadow: 0 0 0 2px rgba(2, 103, 255, 0.2);
+}
+
+.estimate-unit {
+  font-size: 12px;
+  color: #666;
+  margin-left: 2px;
+  font-weight: 500;
+}
+
+.estimate-actions {
+  display: flex;
+  gap: 2px;
+}
+
+.estimate-save-btn,
+.estimate-cancel-btn {
+  width: 20px;
+  height: 20px;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.estimate-save-btn {
+  background: #22c55e;
+  color: white;
+}
+
+.estimate-save-btn:hover:not(:disabled) {
+  background: #16a34a;
+  transform: scale(1.05);
+}
+
+/* ===== TICKET CONTROLS LAYOUT ===== */
+
 .ticket-header {
   display: flex;
   justify-content: space-between;
@@ -76,14 +234,13 @@ estimate-cancel-btn {
   margin-bottom: 8px;
 }
 
-/* ✅ UPDATED: Ticket name styling for better layout with link icon */
 .ticket-name {
   flex: 1;
-  min-width: 0; /* Allow text to truncate */
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  margin-right: 8px; /* Space between ticket name and estimate */
+  margin-right: 8px;
 }
 
 .ticket-controls {
@@ -108,16 +265,14 @@ estimate-cancel-btn {
   background: rgba(239, 68, 68, 0.1);
 }
 
-/* ✅ NEW: Container for ticket content with link icon */
 .ticket-content {
   display: flex;
   align-items: center;
-  gap: 6px; /* Space between link icon and ticket name */
-  flex: 1; /* Take up available space */
-  min-width: 0; /* Allow text to truncate if needed */
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
 }
 
-/* ✅ NEW: Link icon styling */
 .ticket-link-icon {
   display: inline-flex;
   align-items: center;
@@ -130,8 +285,8 @@ estimate-cancel-btn {
   transition: all 0.2s ease;
   background: rgba(255, 255, 255, 0.1);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  flex-shrink: 0; /* Don't shrink the icon */
-  z-index: 10; /* Ensure it's above other elements */
+  flex-shrink: 0;
+  z-index: 10;
 }
 
 .ticket-link-icon:hover {
@@ -141,73 +296,12 @@ estimate-cancel-btn {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
-.ticket-link-icon:active {
-  transform: scale(0.95);
-  background: rgba(255, 255, 255, 0.3);
-}
-
-/* ✅ NEW: Different link icon colors for different ticket categories */
-.ticket-block.production .ticket-link-icon {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.ticket-block.design .ticket-link-icon {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.ticket-block.sp .ticket-link-icon {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-.ticket-block.special .ticket-link-icon {
-  background: rgba(255, 255, 255, 0.15);
-  border-color: rgba(255, 255, 255, 0.3);
-}
-
-/* ✅ NEW: Turnover ticket link icon styling */
-.ticket-block.turnover-production .ticket-link-icon,
-.ticket-block.turnover-design .ticket-link-icon,
-.ticket-block.turnover-sp .ticket-link-icon {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.4);
-  border-style: dashed; /* Match the turnover border style */
-}
-
-/* ✅ NEW: Hover states for different categories */
-.ticket-block.production .ticket-link-icon:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #0267ff;
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.ticket-block.design .ticket-link-icon:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #ff6600;
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.ticket-block.sp .ticket-link-icon:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #e91e63;
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-.ticket-block.special .ticket-link-icon:hover {
-  background: rgba(255, 255, 255, 0.25);
-  color: #8a2ecc;
-  background-color: rgba(255, 255, 255, 0.9);
-}
-
-/* ✅ NEW: Focus state for accessibility */
 .ticket-link-icon:focus {
   outline: 2px solid rgba(255, 255, 255, 0.8);
   outline-offset: 1px;
 }
 
-/* ✅ Time Adjustment Controls */
+/* ===== TIME ADJUSTMENT CONTROLS ===== */
 
 .time-adjustment-controls {
   position: absolute;
@@ -224,7 +318,6 @@ estimate-cancel-btn {
   padding: 1px;
 }
 
-/* Show controls on hover */
 .timeline-cell:hover .time-adjustment-controls {
   opacity: 1;
 }
@@ -252,10 +345,6 @@ estimate-cancel-btn {
   box-shadow: 0 2px 3px rgba(0, 0, 0, 0.3);
 }
 
-.time-adjust-btn:active:not(:disabled) {
-  transform: scale(0.95);
-}
-
 .time-adjust-btn:disabled {
   opacity: 0.4;
   cursor: not-allowed;
@@ -281,62 +370,11 @@ estimate-cancel-btn {
   color: #229954;
 }
 
-/* Ensure proper positioning within cells */
 .timeline-cell {
   position: relative;
 }
 
-/* Hide time controls when split icon is present/hovered */
-.timeline-cell .split-icon:hover ~ .time-adjustment-controls,
-.timeline-cell:has(.split-icon) .time-adjustment-controls {
-  opacity: 0;
-  pointer-events: none;
-}
-
-/* Alternative positioning for cells with split icons */
-.timeline-cell.clipped .time-adjustment-controls {
-  top: 2px;
-  right: 20px; /* Move left to avoid split icon */
-}
-
-/* ✅ NEW: Responsive design for mobile */
-@media (max-width: 768px) {
-  .time-adjust-btn {
-    width: 12px;
-    height: 12px;
-    font-size: 7px;
-  }
-  
-  .time-adjustment-controls {
-    top: 1px;
-    right: 1px;
-  }
-  
-  /* ✅ NEW: Responsive design for link icons on mobile */
-  .ticket-link-icon {
-    width: 14px;
-    height: 14px;
-    font-size: 10px;
-  }
-  
-  .ticket-content {
-    gap: 4px;
-  }
-  
-  /* ✅ NEW: Responsive team buttons */
-  .team-buttons button {
-    width: 80px;
-    height: 45px;
-  }
-  
-  .team-main-name {
-    font-size: 12px;
-  }
-  
-  .team-sub-name {
-    font-size: 9px;
-  }
-}
+/* ===== USER TIMEZONE DISPLAY ===== */
 
 .user-timezone {
   color: #6c757d !important;
@@ -350,7 +388,8 @@ estimate-cancel-btn {
   background: rgba(108, 117, 125, 0.2);
 }
 
-/* App Header */
+/* ===== APP HEADER ===== */
+
 .app-header {
   display: flex;
   justify-content: flex-end;
@@ -361,7 +400,8 @@ estimate-cancel-btn {
   margin-bottom: 10px;
 }
 
-/* Loading Spinner */
+/* ===== LOADING SPINNER ===== */
+
 .loading-spinner {
   display: inline-block;
   width: 40px;
@@ -378,7 +418,8 @@ estimate-cancel-btn {
   100% { transform: rotate(360deg); }
 }
 
-/* Login Form Styles */
+/* ===== LOGIN FORM STYLES ===== */
+
 .login-container {
   min-height: 100vh;
   display: flex;
@@ -495,281 +536,46 @@ estimate-cancel-btn {
   text-align: center;
 }
 
-/* User Menu Styles */
-.user-menu {
-  position: relative;
-  display: inline-block;
+/* ===== PROFILE EDITOR MODAL PORTAL ===== */
+
+.profile-editor-modal-portal {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  z-index: 999999 !important;
+  padding: 20px !important;
+  box-sizing: border-box !important;
 }
 
-.user-menu-trigger {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: #f8f9fa;
-  border: 2px solid #dee2e6;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 14px;
-  color: #495057;
+.profile-editor-modal-portal .profile-editor-container {
+  max-width: 600px !important;
+  width: 100% !important;
+  max-height: 90vh !important;
+  overflow-y: auto !important;
+  margin: 0 !important;
+  padding: 20px !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid #e9ecef !important;
+  position: relative !important;
+  z-index: 999999 !important;
 }
 
-.user-menu-trigger:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
+.modal-open {
+  overflow: hidden !important;
 }
 
-.user-info {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-}
-
-.user-menu .user-name {
-  font-weight: 600;
-  color: #212529;
-  font-size: 14px;
-}
-
-.menu-arrow {
-  font-size: 12px;
-  color: #6c757d;
-  margin-left: 8px;
-}
-
-.user-menu-dropdown {
-  position: absolute;
-  top: 100%;
-  right: 0;
-  margin-top: 4px;
-  background: white;
-  border: 1px solid #dee2e6;
-  border-radius: 8px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 1000;
-  min-width: 280px;
-  overflow: hidden;
-}
-
-.user-profile-info {
-  padding: 16px;
-  background: #f8f9fa;
-}
-
-.profile-line {
-  margin-bottom: 8px;
-  font-size: 13px;
-  color: #495057;
-}
-
-.profile-line:last-child {
-  margin-bottom: 0;
-}
-
-.profile-line strong {
-  color: #212529;
-  font-weight: 600;
-}
-
-.permissions-list {
-  list-style: none;
-  padding: 0;
-  margin: 4px 0 0 0;
-}
-
-.permissions-list li {
-  margin: 2px 0;
-  font-size: 12px;
-  padding: 2px 0;
-}
-
-.permissions-list li.allowed {
-  color: #28a745;
-}
-
-.permissions-list li.denied {
-color: #dc3545;
-}
-
-.signout-btn:hover {
-  background: #ffeaea;
-  color: #c82333;
-}
-
-.permissions-quick {
-  display: flex;
-  gap: 6px;
-  padding: 6px 8px;
-  background: #f8f9fa;
-  border-top: 1px solid #dee2e6;
-  font-size: 10px;
-}
-
-.permission-indicator {
-  padding: 1px 4px;
-  border-radius: 3px;
-  font-weight: 500;
-  font-size: 10px;
-}
-
-.permission-indicator.active {
-  background: #d4edda;
-  color: #155724;
-}
-
-.permission-indicator.inactive {
-  background: #f8d7da;
-  color: #721c24;
-}
-
-.dropdown-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 999 !important;
-  background: transparent;
-}
-
-/* ✅ FIXED: Main content positioning */
-.main-content {
-  z-index: 1;
-  position: relative;
-}
-
-/* Mobile Responsive */
-@media (max-width: 768px) {
-  .login-container {
-    padding: 10px;
-  }
-  
-  .login-form {
-    padding: 30px 20px;
-  }
-  
-  .login-form h2 {
-    font-size: 24px;
-  }
-  
-  .user-menu-dropdown {
-    right: -10px;
-    min-width: 260px;
-  }
-  
-  .user-menu-trigger {
-    padding: 6px 12px;
-    font-size: 13px;
-  }
-  
-  .user-info {
-    gap: 1px;
-  }
-  
-  .user-menu .user-name {
-    font-size: 13px;
-  }
-  
-  .role-badge {
-    font-size: 10px;
-    padding: 1px 6px;
-  }
-  
-  .user-info-inline {
-    gap: 8px;
-  }
-  
-  .welcome-text {
-    font-size: 13px;
-  }
-  
-  .user-role {
-    font-size: 11px;
-    padding: 1px 6px;
-  }
-  
-  .profile-menu-btn {
-    width: 24px;
-    height: 24px;
-  }
-  
-  
-  .dropdown-header {
-    padding: 10px;
-  }
-  
-  .user-avatar-small {
-    width: 28px;
-    height: 28px;
-    font-size: 12px;
-  }
-  
-  .profile-editor-container {
-    margin: 10px;
-    padding: 16px;
-    max-width: none;
-  }
-  
-  .profile-editor-header {
-    margin-bottom: 20px;
-  }
-  
-  .profile-editor-header h2 {
-    font-size: 20px;
-  }
-  
-  .form-actions {
-    flex-direction: column;
-  }
-  
-  .save-button,
-  .cancel-button {
-    width: 100%;
-  }
-  
-  .permissions-info {
-    margin-top: 20px;
-    padding: 12px;
-  }
-}
-
-/* Focus States for Accessibility */
-.user-menu-trigger:focus,
-.submit-button:focus,
-.link-button:focus,
-.sign-out-button:focus,
-.save-button:focus,
-.cancel-button:focus,
-.close-button:focus {
-  outline: 2px solid #0267ff;
-  outline-offset: 2px;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #0267ff;
-  box-shadow: 0 0 0 3px rgba(2, 103, 255, 0.1);
-}
-
-/* Loading State */
-.profile-editor-container .loading-spinner {
-  margin: 20px auto;
-}
-
-.profile-editor-container p {
-  text-align: center;
-  color: #6c757d;
-  margin: 16px 0;
-}
-
-/* Animation for modal appearance */
-@keyframes modalFadeIn {
+@keyframes portalModalFadeIn {
   from {
     opacity: 0;
-    transform: scale(0.9);
+    transform: scale(0.95);
   }
   to {
     opacity: 1;
@@ -777,258 +583,12 @@ color: #dc3545;
   }
 }
 
-.profile-editor-overlay .profile-editor-container {
-  animation: modalFadeIn 0.3s ease-out;
+.profile-editor-modal-portal .profile-editor-container {
+  animation: portalModalFadeIn 0.2s ease-out !important;
 }
 
-/* Role-specific styling */
-.form-group select option[value="manager"] {
-  background: #fff3cd;
-}
+/* ===== PROFILE EDITOR STYLES ===== */
 
-.form-group select option[value="coordinator"] {
-  background: #d1ecf1;
-}
-
-.form-group select option[value="team_member"] {
-  background: #d4edda;
-}
-
-.form-group select option[value="read_only"] {
-  background: #f8d7da;
-}
-
-/* ✅ NEW: Ensure proper drag and drop still works properly */
-.ticket-block.processing {
-  opacity: 0.7;
-  cursor: wait;
-}
-
-.ticket-block.processing .ticket-link-icon {
-  opacity: 0.5;
-  cursor: wait;
-}
-
-.ticket-block:active {
-  cursor: grabbing;
-}
-
-.ticket-block:active .ticket-link-icon {
-  pointer-events: none; /* Disable link clicks during drag */
-}
-
-/* ✅ IMPROVED: Better visual separation between elements */
-.ticket-lobby .ticket-block {
-  margin-bottom: 4px; /* Small space between tickets in lobby */
-}
-
-/* Dark Mode Support (Optional) */
-@media (prefers-color-scheme: dark) {
-  .login-form {
-    background: #2d3748;
-    color: #e2e8f0;
-  }
-  
-  .login-form h2 {
-    color: #f7fafc;
-  }
-  
-  .form-group label {
-    color: #cbd5e0;
-  }
-  
-  .form-group input,
-  .form-group select {
-    background: #4a5568;
-    border-color: #718096;
-    color: #e2e8f0;
-  }
-  
-  .form-group input:focus,
-  .form-group select:focus {
-    border-color: #0267ff;
-    background: #2d3748;
-  }
-  
-  .user-menu-dropdown {
-    background: #2d3748;
-    border-color: #4a5568;
-    color: #e2e8f0;
-  }
-  
-  .user-profile-info {
-    background: #1a202c;
-  }
-  
-  .menu-divider {
-    border-color: #4a5568;
-  }
-
-  /* Force all ticket links to be white */
-.timeline-cell .cell-label {
-  color: white !important;
-  font-weight: bold !important;
-}
-
-.timeline-cell .cell-label:hover {
-  color: orange !important;
-}
-
-/* Keep breaks green */
-.timeline-cell.break-filled .cell-label {
-  color: darkgreen !important;
-}
-
-/* ✅ ADD THESE STYLES TO YOUR styles.css FILE */
-/* Add this after the existing .view-all-header styles (around line 580) */
-
-/* ✅ NEW: Special styling for SP team headers when rotated */
-.sp-team-header {
-  height: 80px !important; /* Same as view-all-header */
-  padding: 4px 2px !important;
-  font-size: 10px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  background-color: #f8f9fa !important;
-  overflow: hidden !important;
-  position: relative !important;
-}
-
-/* ✅ NEW: SP team rotated text styling */
-.sp-team-header .rotated-text {
-  transform: rotate(-90deg); /* Simple 90-degree rotation */
-  white-space: nowrap;
-  font-size: 9px;
-  font-weight: 600;
-  color: #2c3e50;
-  display: inline-block;
-  line-height: 1;
-  transform-origin: center center;
-  max-width: none !important;
-  min-width: 100px;
-  overflow: visible !important;
-  text-overflow: ellipsis;
-  position: relative;
-  background: rgba(248, 249, 250, 0.95);
-  padding: 2px 6px;
-  border-radius: 3px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-/* ✅ NEW: SP team header hover effect */
-.sp-team-header:hover .rotated-text {
-  color: #e91e63; /* SP team pink color */
-  background: rgba(233, 30, 99, 0.15);
-  transform: rotate(-90deg) scale(1.05);
-  transition: all 0.2s ease;
-}
-
-/* ✅ NEW: Hour vs half-hour distinction for SP headers */
-.sp-team-header:nth-child(odd) .rotated-text {
-  font-weight: 700;
-  color: #1a202c;
-}
-
-.sp-team-header:nth-child(even) .rotated-text {
-  font-weight: 500;
-  color: #4a5568;
-  background: rgba(156, 163, 175, 0.1);
-}
-
-/* ✅ NEW: Responsive adjustments for SP headers */
-@media (max-width: 1200px) {
-  .sp-team-header {
-    height: 70px !important;
-  }
-  
-  .sp-team-header .rotated-text {
-    font-size: 8px;
-    max-width: 50px;
-  }
-}
-
-@media (max-width: 768px) {
-  .sp-team-header {
-    height: 60px !important;
-  }
-  
-  .sp-team-header .rotated-text {
-    font-size: 7px;
-    min-width: 40px;
-  }
-}
-
-}
-
-.menu-divider {
-  border: none;
-  border-top: 1px solid #dee2e6;
-  margin: 0;
-}
-
-.sign-out-button {
-  width: 100%;
-  padding: 12px 16px;
-  background: #dc3545;
-  color: white;
-  border: none;
-  cursor: pointer;
-  font-size: 14px;
-  font-weight: 500;
-  transition: background-color 0.2s ease;
-}
-
-.sign-out-button:hover {
-  background: #c82333;
-}
-
-/* Role Badge Styles */
-.role-badge {
-  padding: 2px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.role-badge.manager {
-  background: #ffd700;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-}
-
-.role-badge.coordinator {
-  background: #d1ecf1;
-  color: #0c5460;
-  border: 1px solid #bee5eb;
-}
-
-.role-badge.read-only {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-/* Enhanced Role Indicator */
-.role-indicator {
-  text-align: center;
-  padding: 8px 15px;
-  margin-bottom: 15px;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 500;
-  border: 1px solid transparent;
-  z-index: 1000;
-  position: relative;
-}
-
-.role-indicator strong {
-  font-weight: 600;
-}
-
-/* Profile Editor Container */
 .profile-editor-container {
   max-width: 600px;
   margin: 0 auto;
@@ -1039,33 +599,6 @@ color: #dc3545;
   border: 1px solid #e9ecef;
 }
 
-/* ✅ FIXED: Profile Editor Overlay with Highest Z-Index */
-.profile-editor-overlay {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.5) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  z-index: 50000 !important;
-  padding: 20px;
-}
-
-.profile-editor-overlay .profile-editor-container {
-  max-height: 90vh;
-  overflow-y: auto;
-  margin: 0;
-  z-index: 50001 !important;
-  position: relative !important;
-  background: white !important;
-  border-radius: 12px !important;
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3) !important;
-}
-
-/* Header */
 .profile-editor-header {
   display: flex;
   justify-content: space-between;
@@ -1098,59 +631,19 @@ color: #dc3545;
   color: #495057;
 }
 
-/* Form Styles */
 .profile-form {
   display: flex;
   flex-direction: column;
   gap: 20px;
 }
 
-.form-group {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.form-group label {
-  font-weight: 600;
-  color: #495057;
-  font-size: 14px;
-}
-
-.form-group input,
-.form-group select {
-  padding: 12px 16px;
-  border: 2px solid #e1e5e9;
-  border-radius: 8px;
-  font-size: 16px;
-  transition: all 0.3s ease;
-  background: white;
-  color: #495057;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-  outline: none;
-  border-color: #0267ff;
-  box-shadow: 0 0 0 3px rgba(2, 103, 255, 0.1);
-}
-
-.form-group input.disabled-field,
-.form-group select.disabled-field {
-  background: #f8f9fa;
-  border-color: #dee2e6;
-  color: #6c757d;
-  cursor: not-allowed;
-}
-
 .form-help {
   font-size: 12px;
-  color: #ffffff;
+  color: #6c757d;
   font-style: italic;
   margin-top: 4px;
 }
 
-/* Checkbox styling */
 .checkbox-label {
   display: flex;
   align-items: center;
@@ -1167,7 +660,6 @@ color: #dc3545;
   cursor: pointer;
 }
 
-/* Form Actions */
 .form-actions {
   display: flex;
   gap: 12px;
@@ -1218,25 +710,6 @@ color: #dc3545;
   box-shadow: 0 4px 12px rgba(108, 117, 125, 0.3);
 }
 
-/* Messages */
-.error-message {
-  background: #fee;
-  border: 1px solid #fcc;
-  color: #c00;
-  padding: 12px 16px;
-  border-radius: 8px;
-  font-size: 14px;
-  margin-bottom: 16px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.error-message::before {
-  content: '⚠️';
-  font-size: 16px;
-}
-
 .success-message {
   background: #d4edda;
   border: 1px solid #c3e6cb;
@@ -1255,47 +728,8 @@ color: #dc3545;
   font-size: 16px;
 }
 
-/* Permissions Info */
-.permissions-info {
-  margin-top: 24px;
-  padding: 16px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #e9ecef;
-}
+/* ===== INLINE PROFILE CONTROLS ===== */
 
-.permissions-info h4 {
-  margin: 0 0 12px 0;
-  color: #495057;
-  font-size: 16px;
-  font-weight: 600;
-}
-
-.permissions-info ul {
-  list-style: none;
-  padding: 0;
-  margin: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.permissions-info li {
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.permissions-info li.allowed {
-  color: #28a745;
-}
-
-.permissions-info li.denied {
-  color: #dc3545;
-}
-
-/* Inline Profile Controls Styles */
 .inline-profile-controls {
   position: relative;
   display: flex;
@@ -1353,11 +787,6 @@ color: #dc3545;
   transform: translateY(-1px);
 }
 
-.profile-menu-btn:active {
-  transform: translateY(0);
-}
-
-/* Compact Dropdown Menu */
 .inline-dropdown {
   position: absolute;
   top: 100%;
@@ -1395,19 +824,6 @@ color: #dc3545;
   flex-shrink: 0;
 }
 
-.user-name-small {
-  font-weight: 600;
-  font-size: 13px;
-  color: #212529;
-  line-height: 1.2;
-}
-
-.user-email-small {
-  font-size: 11px;
-  color: #6c757d;
-  line-height: 1.2;
-}
-
 .dropdown-actions {
   padding: 6px;
 }
@@ -1441,55 +857,202 @@ color: #dc3545;
 }
 
 .signout-btn {
-  
-.ticket-block.turnover-production {
-  background-color: #004080 !important; /* dark blue */
-  font-style: italic;
-  border: 2px dashed #003060;
+  color: #dc3545;
 }
 
-.ticket-block.turnover-design {
-  background-color: #cc5200 !important; /* dark orange */
-  font-style: italic;
-  border: 2px dashed #aa4400;
+.signout-btn:hover {
+  background: #ffeaea;
+  color: #c82333;
 }
 
-/* ✅ NEW: SP turnover styling */
-.ticket-block.turnover-sp {
-  background-color: #ad1457 !important; /* dark pink */
-  font-style: italic;
-  border: 2px dashed #880e4f;
-}
-
-/* ✅ UPDATED: Clear All Button Styling */
-.clear-all-container {
+.permissions-quick {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  background: #f8f9fa;
+  border-top: 1px solid #dee2e6;
+  font-size: 10px;
 }
 
-.clear-all-button {
-  background-color: #dc3545;
-  color: white;
+.permission-indicator {
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-weight: 500;
+  font-size: 10px;
+}
+
+.permission-indicator.active {
+  background: #d4edda;
+  color: #155724;
+}
+
+.permission-indicator.inactive {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.dropdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 999 !important;
+  background: transparent;
+}
+
+/* ===== TIMELINE STYLES ===== */
+
+body {
+  font-family: sans-serif;
+  padding: 20px;
+  background-color: white;
+  color: black;
+}
+
+.day-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.day-nav-btn {
   padding: 10px 20px;
-  font-weight: bold;
+  background: #0267ff;
+  color: white;
   border: none;
   border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s ease;
+  font-weight: bold;
+  transition: background-color 0.2s ease;
   font-size: 14px;
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
 }
 
-.clear-all-button:hover {
-  background-color: #c82333;
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+.day-nav-btn:hover {
+  background: #0056d3;
 }
 
-.clear-all-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+.current-day-display {
+  text-align: center;
+  font-size: 18px;
+  font-weight: bold;
+  color: #333;
+}
+
+.today-badge {
+  background: #28a745;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.week-overview-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  padding: 10px;
+  background: #ffffff;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+}
+
+.day-tab {
+  padding: 8px 12px;
+  background: white;
+  border: 2px solid #dee2e6;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 80px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.day-tab:hover {
+  border-color: #0267ff;
+  background: #f8f9ff;
+}
+
+.day-tab.selected {
+  background: #0267ff;
+  color: white;
+  border-color: #0267ff;
+}
+
+.day-tab.today {
+  border-color: #28a745;
+  background: #f8fff9;
+  font-weight: bold;
+}
+
+.day-tab.today.selected {
+  background: #28a745;
+  border-color: #28a745;
+}
+
+/* ===== TICKET STYLES ===== */
+
+.ticket-entry {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.ticket-entry input {
+  padding: 5px;
+  flex: 1;
+}
+
+#tickets-area {
+  position: relative;
+  min-height: 60px;
+  background: #eaeaea;
+  border: 1px dashed #999;
+  margin-bottom: 30px;
+  padding: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.ticket-block {
+  background: #0267ff;
+  color: white;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: grab;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 30px;
+  font-size: 14px;
+  white-space: nowrap;
+  position: relative;
+}
+
+.ticket-block.design {
+  background-color: rgb(255, 123, 0);
+  color: white;
+}
+
+.ticket-block.production {
+  background-color: #0267ff;
+  color: white;
+}
+
+.ticket-block.sp {
+  background-color: #e91e63;
+  color: white;
 }
 
 .ticket-block.special {
@@ -1497,48 +1060,218 @@ color: #dc3545;
   color: white;
 }
 
-.coverage-panel {
-  margin-top: 20px;
-  padding: 10px 16px;
-  background-color: #f8f8f8;
-  border-radius: 8px;
-  font-family: sans-serif;
-  max-width: 320px;
+.ticket-block.turnover-production {
+  background-color: #004080 !important;
+  font-style: italic;
+  border: 2px dashed #003060;
 }
 
-.coverage-row {
+.ticket-block.turnover-design {
+  background-color: #cc5200 !important;
+  font-style: italic;
+  border: 2px dashed #aa4400;
+}
+
+.ticket-block.turnover-sp {
+  background-color: #ad1457 !important;
+  font-style: italic;
+  border: 2px dashed #880e4f;
+}
+
+.break-block {
+  background-color: lightgray;
+  color: darkgreen;
+  font-weight: bold;
+}
+
+.trash-dropzone {
+  margin-left: auto;
+  padding: 0 10px;
+  border-left: 2px solid #999;
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
-}
-
-.coverage-label {
-  width: 100px;
-  font-weight: bold;
-  font-size: 14px;
-}
-
-.coverage-tick {
-  font-size: 18px;
-  margin: 0 4px;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.tick-active {
-  color: green;
-}
-
-.tick-inactive {
-  color: #ccc;
-}
-
-.timeline-scroll-container h3 {
-  margin-top: 40px;
   font-size: 20px;
-  color: #333;
-  border-bottom: 2px solid #ccc;
-  padding-bottom: 4px;
+  cursor: pointer;
+}
+
+/* ===== TIMELINE LAYOUT ===== */
+
+.timeline {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: stretch;
+  margin-bottom: 6px;
+  overflow: visible !important;
+  position: relative;
+}
+
+.timeline-label {
+  font-weight: bold;
+  padding-right: 10px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+}
+
+.timeline-track {
+  display: grid;
+  gap: 1px;
+  grid-auto-flow: column;
+  width: 100%;
+  overflow: visible !important;
+  position: relative;
+  z-index: 1 !important;
+}
+
+.timeline-cell {
+  height: 40px;
+  border: 1px solid #ccc;
+  text-align: center;
+  font-size: 12px;
+  position: relative;
+  overflow: hidden;
+  background-color: white;
+  box-sizing: border-box;
+  z-index: 1 !important;
+}
+
+.timeline-header-cell {
+  background-color: #f8f9fa !important;
+  font-weight: bold;
+  color: #333 !important;
+  font-size: 10px !important;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
+  overflow: hidden;
+  min-width: 0;
+  border: 1px solid #ddd;
+  text-align: center;
+  height: 30px;
+  line-height: 26px;
+  position: relative;
+  z-index: 1 !important;
+}
+
+.team-view-header {
+  white-space: nowrap;
+  word-break: normal;
+  line-height: 26px;
+  height: 30px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-all-header {
+  height: 80px !important;
+  padding: 4px 2px !important;
+  font-size: 10px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  background-color: #f8f9fa !important;
+  overflow: hidden !important;
+  position: relative !important;
+}
+
+.rotated-text {
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 600;
+  color: #2c3e50;
+  display: inline-block;
+  line-height: 1;
+  transform-origin: center center;
+  max-width: none !important;
+  min-width: 100px;
+  overflow: visible !important;
+  text-overflow: ellipsis;
+  position: relative;
+}
+
+.view-all-header .rotated-text {
+  background: rgba(248, 249, 250, 0.95);
+  padding: 2px 6px;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.view-all-header:hover .rotated-text {
+  color: #0267ff;
+  background: rgba(2, 103, 255, 0.15);
+  transform: rotate(-90deg) scale(1.05);
+  transition: all 0.2s ease;
+}
+
+.timeline-cell a.cell-label,
+.timeline-cell span.cell-label {
+  text-decoration: none;
+  color: white;
+  font-weight: bold;
+  font-size: 10px;
+  display: inline-block;
+  width: 100%;
+  height: 100%;
+  line-height: 46px;
+  transition: transform 0.2s ease;
+}
+
+.timeline-cell span.cell-label:hover,
+.timeline-cell a.cell-label:hover {
+  color: orange;
+  transform: translateY(-1px) scale(1.01);
+}
+
+.hover-preview {
+  outline: 2px dashed #666;
+}
+
+.break-filled span.cell-label {
+  background-color: lightgray !important;
+  color: darkgreen !important;
+}
+
+.ticket-space {
+  background-color: #f0f0f0 !important;
+  border: 2px dashed #999 !important;
+  position: relative;
+}
+
+.space-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  position: relative;
+}
+
+.space-label {
+  font-size: 8px;
+  color: #666;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+.space-indicator {
+  font-size: 10px;
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  opacity: 0.7;
+}
+
+.fully-off .timeline-cell {
+  opacity: 0.3;
+}
+
+.off-shift {
+  background-color: #e0e0e0 !important;
 }
 
 .off-shift-all {
@@ -1546,20 +1279,31 @@ color: #dc3545;
   opacity: 0.4;
 }
 
-.break-mode-toggle {
+.clipped {
+  position: relative;
+}
+
+.split-icon {
+  position: absolute;
+  top: 2px;
+  right: 4px;
   font-size: 12px;
-  margin: 5px 0;
+  color: yellow;
+  font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+  z-index: 2;
 }
 
-.mode-btn {
-  transition: all 0.2s ease;
+.split-icon:hover {
+  color: #fff !important;
+  background: rgba(255, 165, 0, 0.9) !important;
+  border: 1px solid #ff8c00;
+  transform: scale(1.1);
+  box-shadow: 0 2px 6px rgba(255, 165, 0, 0.4);
 }
 
-.mode-btn:hover {
-  opacity: 0.8;
-}
-
-/* ✅ NEW: User name OFF state styling */
+/* ===== USER NAME STATES ===== */
 
 .user-name {
   display: flex;
@@ -1600,7 +1344,6 @@ color: #dc3545;
   margin-left: 2px;
 }
 
-/* ✅ ENHANCED: Timeline off state - more prominent greying */
 .fully-off {
   position: relative;
 }
@@ -1628,157 +1371,299 @@ color: #dc3545;
   color: #cccccc !important;
 }
 
-/* EstimateEditor Styles */
+/* ===== TEAM BUTTONS ===== */
 
-.estimate-editor-container {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 120px;
-  flex-shrink: 0; /* Don't shrink the estimate editor */
-}
-
-.estimate-input-wrapper {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-
-.estimate-input {
-  width: 50px;
-  padding: 4px 6px;
-  border: 2px solid #0267ff;
-  border-radius: 4px;
-  font-size: 14px;
-  font-weight: 600;
+.team-buttons {
+  margin-bottom: 20px;
   text-align: center;
-  background: white;
-  outline: none;
-  transition: border-color 0.2s ease;
-  color: #000000;
-}
-
-.estimate-input:focus {
-  border-color: #0056d3;
-  box-shadow: 0 0 0 2px rgba(2, 103, 255, 0.2);
-}
-
-.estimate-input:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.estimate-unit {
-  font-size: 12px;
-  color: #666;
-  margin-left: 2px;
-  font-weight: 500;
-}
-
-.estimate-actions {
-  display: flex;
-  gap: 2px;
-}
-
-.estimate-save-btn,
-.estimate-cancel-btn {
-  width: 20px;
-  height: 20px;
-  border: none;
-  border-radius: 3px;
-  cursor: pointer;
-  font-size: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.15s ease;
+  flex-wrap: wrap;
+  gap: 10px;
 }
 
-.estimate-save-btn {
-  background: #22c55e;
+.team-buttons button {
+  margin-left: 0;
+  padding: 8px 12px;
+  border: none;
+  background: #f0f0f0;
+  cursor: pointer;
+  font-weight: bold;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1.2;
+  width: 100px;
+  height: 50px;
+  flex-shrink: 0;
+  text-align: center;
+  transition: all 0.2s ease;
+}
+
+.team-buttons button.active {
+  background-color: #007bff;
   color: white;
 }
 
-.estimate-save-btn:hover:not(:disabled) {
-  background: #16a34a;
-  transform: scale(1.05);
+.team-buttons button:hover:not(.active) {
+  background-color: #e0e0e0;
 }
 
-./* ✅ NEW: Read-only mode styling */
-/* ✅ ADD THESE STYLES TO THE VERY TOP OF YOUR styles.css FILE */
+.team-main-name {
+  font-size: 14px;
+  font-weight: bold;
+  line-height: 1.1;
+  margin-bottom: 2px;
+}
 
-/* ✅ HIGHEST PRIORITY: Portal Modal Overlay */
-.profile-editor-modal-portal {
-  position: fixed !important;
-  top: 0 !important;
-  left: 0 !important;
-  right: 0 !important;
-  bottom: 0 !important;
-  background: rgba(0, 0, 0, 0.5) !important;
+.team-sub-name {
+  font-size: 10px;
+  font-weight: normal;
+  opacity: 0.8;
+  line-height: 1;
+}
+
+/* ===== CATEGORY BUTTONS ===== */
+
+.category-buttons {
+  display: flex;
+  gap: 2px;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.category-btn {
+  padding: 5px 10px;
+  font-weight: bold;
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  min-width: 80px;
+  text-align: center;
+}
+
+.category-btn.production {
+  background-color: #6c757d;
+}
+
+.category-btn.production.active {
+  background-color: #007bff;
+}
+
+.category-btn.design {
+  background-color: #6c757d;
+}
+
+.category-btn.design.active {
+  background-color: #ff6600;
+}
+
+.category-btn.sp {
+  background-color: #6c757d;
+}
+
+.category-btn.sp.active {
+  background-color: #e91e63;
+}
+
+.category-btn:hover:not(.active) {
+  background-color: #5a6268;
+}
+
+/* ===== DROPDOWNS ===== */
+
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+.dropbtn {
+  padding: 5px 10px;
+  margin-left: 10px;
+  background-color: #ccc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  border: 1px solid #ccc;
+  min-width: 120px;
+  z-index: 100;
+}
+
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.dropdown-content div {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.dropdown-content div:hover {
+  background-color: #f1f1f1;
+}
+
+/* ===== TIMELINE CONTAINER ===== */
+
+.timeline-container-wrapper {
+  position: relative;
+  width: 100%;
+  z-index: 1;
+}
+
+.timeline-scroll-container {
+  overflow-x: auto;
+  overflow-y: visible;
+  width: 100vw !important;
+  max-width: none !important;
+  margin-left: calc(-2rem) !important;
+  margin-right: calc(-2rem) !important;
+  padding: 0 2rem !important;
+  padding-bottom: 10px;
+  box-sizing: border-box !important;
+  z-index: 1;
+  position: relative;
+}
+
+.bottom-controls {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 20px;
+  padding: 15px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.clear-all-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.clear-all-button {
+  background-color: #dc3545;
+  color: white;
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 14px;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+}
+
+.clear-all-button:hover {
+  background-color: #c82333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+/* ===== SP TEAM HEADERS ===== */
+
+.sp-team-header {
+  height: 80px !important;
+  padding: 4px 2px !important;
+  font-size: 10px !important;
   display: flex !important;
   align-items: center !important;
   justify-content: center !important;
-  z-index: 999999 !important; /* Extremely high z-index */
-  padding: 20px !important;
-  box-sizing: border-box !important;
-}
-
-/* ✅ Portal Modal Content */
-.profile-editor-modal-portal .profile-editor-container {
-  max-width: 600px !important;
-  width: 100% !important;
-  max-height: 90vh !important;
-  overflow-y: auto !important;
-  margin: 0 !important;
-  padding: 20px !important;
-  background: white !important;
-  border-radius: 12px !important;
-  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4) !important;
-  border: 1px solid #e9ecef !important;
-  position: relative !important;
-  z-index: 999999 !important;
-}
-
-/* ✅ Ensure portal modal appears above everything */
-.profile-editor-modal-portal * {
-  z-index: inherit !important;
-}
-
-/* ✅ FORCE: Timeline elements to stay below modals */
-.timeline-scroll-container,
-.timeline-container-wrapper,
-.timeline,
-.timeline-track,
-.timeline-cell,
-.timeline-header-cell,
-.main-content {
-  z-index: 1 !important;
-  position: relative !important;
-}
-
-/* ✅ FORCE: Body scroll lock when modal is open */
-.modal-open {
+  background-color: #f8f9fa !important;
   overflow: hidden !important;
+  position: relative !important;
 }
 
-/* ✅ Animation for portal modal */
-@keyframes portalModalFadeIn {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+.sp-team-header .rotated-text {
+  transform: rotate(-90deg);
+  white-space: nowrap;
+  font-size: 9px;
+  font-weight: 600;
+  color: #2c3e50;
+  display: inline-block;
+  line-height: 1;
+  transform-origin: center center;
+  max-width: none !important;
+  min-width: 100px;
+  overflow: visible !important;
+  text-overflow: ellipsis;
+  position: relative;
+  background: rgba(248, 249, 250, 0.95);
+  padding: 2px 6px;
+  border-radius: 3px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.profile-editor-modal-portal .profile-editor-container {
-  animation: portalModalFadeIn 0.2s ease-out !important;
+.sp-team-header:hover .rotated-text {
+  color: #e91e63;
+  background: rgba(233, 30, 99, 0.15);
+  transform: rotate(-90deg) scale(1.05);
+  transition: all 0.2s ease;
 }
 
-/* ✅ Mobile responsive for portal */
+/* ===== RESPONSIVE DESIGN ===== */
+
 @media (max-width: 768px) {
+  .timezone-buttons {
+    gap: 2px;
+  }
+
+  .timezone-btn {
+    padding: 4px 8px;
+    font-size: 10px;
+  }
+
+  .timezone-toggle-enhanced {
+    padding: 6px 12px;
+    gap: 8px;
+  }
+
+  .time-adjust-btn {
+    width: 12px;
+    height: 12px;
+    font-size: 7px;
+  }
+  
+  .time-adjustment-controls {
+    top: 1px;
+    right: 1px;
+  }
+  
+  .ticket-link-icon {
+    width: 14px;
+    height: 14px;
+    font-size: 10px;
+  }
+  
+  .ticket-content {
+    gap: 4px;
+  }
+  
+  .team-buttons button {
+    width: 80px;
+    height: 45px;
+  }
+  
+  .team-main-name {
+    font-size: 12px;
+  }
+  
+  .team-sub-name {
+    font-size: 9px;
+  }
+
   .profile-editor-modal-portal {
     padding: 10px !important;
   }
@@ -1789,329 +1674,44 @@ color: #dc3545;
     margin: 0 !important;
     border-radius: 8px !important;
   }
-}
 
-/* ===== EXISTING STYLES CONTINUE BELOW ===== */
-
-.read-only {
-  opacity: 0.9;
-}
-
-.ticket-lobby.read-only {
-  background: #f8f9fa;
-  border-color: #e9ecef;
-}
-
-.read-only-indicator {
-  text-align: center;
-  padding: 8px;
-  background: #fff3cd;
-  margin-bottom: 10px;
-  border-radius: 4px;
-  font-size: 12px;
-  color: #856404;
-  border: 1px solid #ffeaa7;
-}
-
-.ticket-block.read-only {
-  cursor: default !important;
-  opacity: 0.95;
-}
-
-.ticket-block.read-only:hover {
-  transform: none !important;
-}
-
-.ticket-block.read-only-ticket {
-  cursor: default !important;
-}
-
-.ticket-block.read-only .ticket-name-link {
-  cursor: pointer !important;
-}
-
-/* ===== VISUAL FEEDBACK FOR READ-ONLY MODE ===== */
-/* Subtle visual indication that this is read-only */
-.timeline-track.read-only-timeline {
-  opacity: 0.95;
-  border-left: 2px solid #dee2e6; /* Subtle left border */
-}
-
-/* ===== DISABLE HOVER EFFECTS ON TIMELINE ===== */
-/* Remove all interactive hover effects for read-only users */
-.timeline-track.read-only-timeline .timeline-cell:hover {
-  background-color: inherit !important;
-  transform: none !important;
-  box-shadow: none !important;
-}
-
-.timeline-track.read-only-timeline .hover-preview {
-  outline: none !important;
-  border: none !important;
-}
-
-.timeline-track.read-only .timeline-cell {
-  cursor: default !important;
-}
-
-.timeline-track.read-only-timeline .timeline-cell {
-  cursor: default !important;
-}
-
-.timeline-track.read-only .ticket-link-clickable {
-  cursor: pointer !important;
-}
-
-.timeline-track.read-only-timeline .ticket-link-clickable {
-  cursor: pointer !important;
-  pointer-events: auto !important;
-}
-
-/* ===== HIDE TIME ADJUSTMENT CONTROLS ===== */
-/* Completely hide time controls for read-only users */
-.timeline-track.read-only-timeline .time-adjustment-controls {
-  display: none !important;
-}
-
-.timeline-cell.read-only-cell .time-adjustment-controls {
-  display: none !important;
-}
-/* ===== HIDE SPLIT OVERFLOW ICONS ===== */
-/* Hide turnover split icons for read-only users */
-.timeline-track.read-only-timeline .split-icon {
-  display: none !important;
-}
-
-.timeline-cell.read-only-cell .split-icon {
-  display: none !important;
-}
-
-/* ===== HIDE YELLOW EYE ICONS AND STATUS CONTROLS ===== */
-/* Target any yellow status icons or eye icons */
-.read-only .status-eye-icon,
-.read-only .yellow-status-icon,
-.read-only .user-status-eye,
-.read-only .off-day-eye {
-  display: none !important;
-}
-
-/* Hide yellow boxes with eye icons */
-.read-only .status-box,
-.read-only .user-status-box,
-.read-only .off-status-box {
-  display: none !important;
-  visibility: hidden !important;
-}
-
-/* Target any elements with yellow background that might be status indicators */
-.read-only [style*="background: yellow"],
-.read-only [style*="background-color: yellow"],
-.read-only .yellow-bg,
-.read-only .status-yellow {
-  display: none !important;
-}
-
-/* ===== ENSURE TICKET LINKS WORK IN READ-ONLY ===== */
-/* Make sure ticket links are still clickable and styled properly */
-.timeline-track.read-only-timeline .cell-label.ticket-link-clickable {
-  cursor: pointer !important;
-  text-decoration: underline !important;
-  pointer-events: auto !important;
-  color: inherit !important;
-}
-
-.timeline-track.read-only-timeline .cell-label.ticket-link-clickable:hover {
-  color: orange !important;
-  transform: translateY(-1px) scale(1.01) !important;
-}
-
-/* ===== CLEAN UP ANY INTERACTIVE ELEMENTS ===== */
-/* Hide any buttons or controls that shouldn't be in read-only mode */
-.read-only .user-controls,
-.read-only .timeline-controls,
-.read-only .edit-controls {
-  display: none !important;
-}
-
-/* ===== ACCESSIBILITY IMPROVEMENTS ===== */
-/* Ensure read-only state is clear to users */
-.user-name.read-only::after {
-  content: " (-)";
-  font-size: 10px;
-  color: #6c757d;
-  font-weight: normal;
-  margin-left: 4px;
-}
-
-/* ===== MOBILE RESPONSIVE FIXES ===== */
-@media (max-width: 768px) {
-  .user-name.read-only::after {
-    content: " 👁️";
-    margin-left: 2px;
+  .login-container {
+    padding: 10px;
   }
   
-  .read-only-indicator {
-    font-size: 8px;
+  .login-form {
+    padding: 30px 20px;
+  }
+  
+  .login-form h2 {
+    font-size: 24px;
+  }
+
+  .form-actions {
+    flex-direction: column;
+  }
+  
+  .save-button,
+  .cancel-button {
+    width: 100%;
   }
 }
 
-/* ===== FOCUS STATE CLEANUP ===== */
-/* Remove focus states for non-interactive elements in read-only */
-.timeline-track.read-only-timeline .timeline-cell:focus {
-  outline: none !important;
+/* ===== FOCUS STATES FOR ACCESSIBILITY ===== */
+
+.timezone-btn:focus,
+.submit-button:focus,
+.link-button:focus,
+.save-button:focus,
+.cancel-button:focus,
+.close-button:focus {
+  outline: 2px solid #0267ff;
+  outline-offset: 2px;
 }
 
-.user-name.read-only:focus {
-  outline: none !important;
+/* ===== MAIN CONTENT POSITIONING ===== */
+
+.main-content {
+  z-index: 1;
+  position: relative;
 }
-
-.user-name.read-only {
-  cursor: default !important;
-  opacity: 0.9;
-  pointer-events: none; /* Completely disable clicking */
-  color: #495057 !important; /* Neutral color */
-}
-
-.user-name.read-only:hover {
-  background-color: transparent !important; /* Remove hover effect */
-  transform: none !important;
-  color: #495057 !important;
-}
-
-.user-name.read-only .off-indicator {
-  display: none !important;
-}
-
-/* ===== READ-ONLY VISUAL INDICATORS ===== */
-/* Style for read-only indicator text */
-.read-only-indicator {
-  color: #6c757d;
-  font-weight: normal;
-  font-size: 10px;
-  opacity: 0.7;
-}
-
-/* ===== DISABLE DRAG AND DROP ===== */
-/* Prevent dragging in read-only mode */
-.timeline-track.read-only-timeline .timeline-cell[draggable="true"] {
-  cursor: default !important;
-  pointer-events: none !important;
-}
-
-.timeline-track.read-only-timeline .timeline-cell .cell-label {
-  pointer-events: none !important;
-}
-
-/* Re-enable links in read-only mode */
-.timeline-track.read-only-timeline .timeline-cell .ticket-link-clickable {
-  pointer-events: auto !important;
-  cursor: pointer !important;
-  color: white !important;
-}
-
-/* ===== HIDE USER OFF/ON STATUS CONTROLS ===== */
-/* Hide any remaining off-day status controls */
-.read-only .user-off-toggle,
-.read-only .user-status-button,
-.read-only .off-day-button {
-  display: none !important;
-}
-
-/* Hide off status visual indicators for read-only */
-.user-name.read-only.user-off {
-  font-style: normal !important; /* Remove italic styling */
-  color: #495057 !important; /* Same as normal users */
-}
-
-.user-name.read-only.user-off .off-indicator {
-  display: none !important;
-}
-
-
-.estimate-display.read-only {
-  background: rgba(108, 117, 125, 0.1);
-  padding: 2px 6px;
-  border-radius: 3px;
-  cursor: default !important;
-}
-
-.estimate-display.read-only:hover {
-  transform: none !important;
-  border-color: transparent !important;
-}
-
-/* ===== READ-ONLY TIMELINE CELLS ===== */
-/* Make timeline cells non-interactive but keep links working */
-.timeline-cell.read-only-cell {
-  cursor: default !important;
-}
-
-.timeline-cell.read-only-cell:hover {
-  background-color: inherit !important;
-  transform: none !important;
-}
-
-/* ✅ EXISTING STYLES BELOW */
-
-/* Visual indicator for spaced tickets */
-.ticket-space::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(45deg, transparent 30%, rgba(153, 153, 153, 0.1) 30%, rgba(153, 153, 153, 0.1) 70%, transparent 70%);
-  pointer-events: none;
-}
-
-/* ✅ NEW: Elongated ticket indicator */
-.elongated-indicator {
-  position: absolute;
-  top: 2px;
-  right: 2px;
-  font-size: 10px;
-  color: rgba(255, 255, 255, 0.8);
-  font-weight: bold;
-  z-index: 2;
-  pointer-events: none;
-}
-
-.timeline-cell:hover .elongated-indicator {
-  color: orange;
-}
-
-body {
-  font-family: sans-serif;
-  padding: 20px;
-  background-color: white;
-  color: black;
-}
-
-#current-date {
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-/* ✅ NEW: Day Navigation Styles */
-.day-navigation {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 30px;
-  margin-bottom: 20px;
-  padding: 15px;
-  background: #f8f9fa;
-  border-radius: 8px;
-  border: 1px solid #dee2e6;
-}
-
-.day-nav-btn {
-  padding: 10px 20px;
-  background: #0267ff;
-  color: white;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-weight: bold;
-  transition: background-color 0.2s ease;
