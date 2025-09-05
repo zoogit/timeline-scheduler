@@ -2,7 +2,7 @@
 
 .timezone-toggle-enhanced {
   display: flex;
-  align-items: right;
+  align-items: center;
   gap: 12px;
   padding: 8px 16px;
   border-radius: 8px;
@@ -1713,5 +1713,6 @@ body {
   z-index: 1;
   position: relative;
 }
+
 
 
