@@ -707,7 +707,7 @@ function AppContent() {
 
           {authLoading && (
             <p style={{ color: '#6c757d', margin: '5px 0' }}>
-              🔐 Checking authentication...
+              🔍 Checking authentication...
             </p>
           )}
 
@@ -1095,12 +1095,12 @@ function AppContent() {
 
         {/* Timeline Container */}
         <div className="timeline-container-wrapper">
-          {/* Timezone Selection */}
+          {/* ✅ UPDATED: Timezone Selection with EST */}
           <div className="timeline-controls-header">
             <div className="timezone-toggle-enhanced">
               <span className="timezone-label">Time:</span>
               <div className="timezone-buttons">
-                {['PST', 'CST', 'GMT'].map((tz) => (
+                {['PST', 'CST', 'EST', 'GMT'].map((tz) => (
                   <button
                     key={tz}
                     className={`timezone-btn ${
