@@ -1,56 +1,36 @@
 // src/components/TicketLobby.jsx
-// FIXED version that prevents infinite estimate updates
+// CRITICAL FIX: Remove database operations from useMemo to prevent infinite loops
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles.css';
 import supabase from '../supabaseClient';
 
-// FIXED EstimateEditor component with proper state management
+// EstimateEditor component (keeping existing - this wasn't the issue)
 const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [editValue, setEditValue] = useState('');
   const [isValidating, setIsValidating] = useState(false);
   const inputRef = useRef(null);
 
-  // FIXED: Prevent infinite re-renders by stabilizing the edit value
   useEffect(() => {
-    if (isEditing && inputRef.current && !isValidating) {
-      const currentEstimate = ticket.estimate?.toString() || '1';
-      if (editValue !== currentEstimate) {
-        setEditValue(currentEstimate);
-      }
+    if (isEditing && inputRef.current) {
+      setEditValue(ticket.estimate?.toString() || '1');
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, [isEditing, ticket.estimate, editValue, isValidating]);
+  }, [isEditing, ticket.estimate]);
 
-  const handleStartEdit = useCallback((e) => {
+  const handleStartEdit = (e) => {
     e.stopPropagation();
-    e.preventDefault();
-    
-    // FIXED: Prevent editing if already updating
-    if (isUpdating || isValidating) {
-      console.log('Estimate update already in progress, ignoring edit request');
-      return;
-    }
-    
-    console.log('Starting estimate edit for ticket:', ticket.id);
     setIsEditing(true);
-  }, [isUpdating, isValidating, ticket.id]);
+  };
 
-  const handleCancel = useCallback(() => {
-    console.log('Cancelling estimate edit for ticket:', ticket.id);
+  const handleCancel = () => {
     setIsEditing(false);
     setEditValue('');
-    setIsValidating(false);
-  }, [ticket.id]);
+  };
 
-  const validateAndSave = useCallback(async () => {
-    if (isValidating) {
-      console.log('Already validating, ignoring save request');
-      return;
-    }
-    
+  const validateAndSave = async () => {
     setIsValidating(true);
     
     const numValue = parseFloat(editValue);
@@ -62,19 +42,8 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
     }
 
     const roundedValue = Math.round(numValue * 2) / 2;
-    const currentEstimate = ticket.estimate || 1;
-    
-    // FIXED: Only update if the value actually changed
-    if (roundedValue === currentEstimate) {
-      console.log('Estimate unchanged, skipping update');
-      setIsEditing(false);
-      setEditValue('');
-      setIsValidating(false);
-      return;
-    }
     
     try {
-      console.log(`Updating estimate for ticket ${ticket.id}: ${currentEstimate} -> ${roundedValue}`);
       await onUpdateEstimate(ticket.id, roundedValue);
       setIsEditing(false);
       setEditValue('');
@@ -84,9 +53,9 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
     }
     
     setIsValidating(false);
-  }, [editValue, ticket.id, ticket.estimate, onUpdateEstimate, isValidating]);
+  };
 
-  const handleKeyDown = useCallback((e) => {
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       validateAndSave();
@@ -94,21 +63,14 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
       e.preventDefault();
       handleCancel();
     }
-  }, [validateAndSave, handleCancel]);
+  };
 
-  const handleInputChange = useCallback((e) => {
+  const handleInputChange = (e) => {
     const value = e.target.value;
     if (value === '' || /^\d*\.?\d*$/.test(value)) {
       setEditValue(value);
     }
-  }, []);
-
-  // FIXED: Prevent blur from triggering save if we're already validating
-  const handleBlur = useCallback(() => {
-    if (!isValidating) {
-      validateAndSave();
-    }
-  }, [validateAndSave, isValidating]);
+  };
 
   if (isEditing) {
     return (
@@ -120,17 +82,17 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
             value={editValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
+            onBlur={validateAndSave}
             className="estimate-input"
             placeholder="Hours"
-            disabled={isValidating || isUpdating}
+            disabled={isValidating}
           />
           <span className="estimate-unit">h</span>
         </span>
         <span className="estimate-actions">
           <button
             onClick={validateAndSave}
-            disabled={isValidating || isUpdating}
+            disabled={isValidating}
             className="estimate-save-btn"
             title="Save (Enter)"
           >
@@ -138,7 +100,7 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
           </button>
           <button
             onClick={handleCancel}
-            disabled={isValidating || isUpdating}
+            disabled={isValidating}
             className="estimate-cancel-btn"
             title="Cancel (Esc)"
           >
@@ -154,10 +116,6 @@ const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
       className={`estimate-display ${isUpdating ? 'updating' : ''}`}
       onClick={handleStartEdit}
       title="Click to edit estimate"
-      style={{ 
-        cursor: isUpdating ? 'wait' : 'pointer',
-        opacity: isUpdating ? 0.6 : 1 
-      }}
     >
       <span className="estimate-value">
         {ticket.estimate || 1}
@@ -175,83 +133,211 @@ function TicketLobby({
   applyOptimisticDelete
 }) {
   const [updatingTickets, setUpdatingTickets] = useState(new Set());
+  // ✅ CRITICAL FIX: Add processing state to prevent concurrent consolidation
+  const [processingConsolidation, setProcessingConsolidation] = useState(false);
 
-  // FIXED: Stable update function that prevents infinite loops
-  const handleUpdateEstimate = useCallback(async (ticketId, newEstimate) => {
-    // FIXED: Prevent concurrent updates to the same ticket
-    if (updatingTickets.has(ticketId)) {
-      console.log(`Estimate update already in progress for ticket ${ticketId}`);
-      return;
-    }
-    
-    console.log(`Starting estimate update for ticket ${ticketId}: ${newEstimate}`);
-    
+  const handleUpdateEstimate = async (ticketId, newEstimate) => {
     setUpdatingTickets(prev => new Set([...prev, ticketId]));
     
     try {
       const originalTicket = tickets.find(t => t.id === ticketId);
       
-      if (!originalTicket) {
-        console.error(`Original ticket not found: ${ticketId}`);
-        return;
-      }
-      
-      // FIXED: Don't update if estimate is the same
-      if (originalTicket.estimate === newEstimate) {
-        console.log(`Estimate unchanged for ticket ${ticketId}, skipping update`);
-        return;
-      }
-
-      // Apply optimistic update
       applyOptimisticUpdate(ticketId, { 
         estimate: newEstimate,
         original_estimate: originalTicket.original_estimate || originalTicket.estimate
       });
 
-      // FIXED: More robust database update with better error handling
       const { error } = await supabase
         .from('tickets')
         .update({ 
           estimate: newEstimate,
-          original_estimate: originalTicket.original_estimate || originalTicket.estimate,
-          updated_at: new Date().toISOString() // Add timestamp to prevent caching issues
+          original_estimate: originalTicket.original_estimate || originalTicket.estimate
         })
         .eq('id', ticketId);
 
-      if (error) {
-        console.error(`Database update failed for ticket ${ticketId}:`, error);
-        
-        // Revert optimistic update
-        applyOptimisticUpdate(ticketId, { 
-          estimate: originalTicket.estimate 
-        });
-        
-        throw error;
-      }
-      
-      console.log(`Successfully updated estimate for ticket ${ticketId}`);
+      if (error) throw error;
       
     } catch (error) {
-      console.error(`Error updating estimate for ticket ${ticketId}:`, error);
-      
-      // Ensure we revert to original state on any error
       const originalTicket = tickets.find(t => t.id === ticketId);
-      if (originalTicket) {
-        applyOptimisticUpdate(ticketId, { 
-          estimate: originalTicket.estimate 
-        });
-      }
-      
+      applyOptimisticUpdate(ticketId, { 
+        estimate: originalTicket.estimate 
+      });
       throw error;
     } finally {
-      // FIXED: Always clean up the updating state
       setUpdatingTickets(prev => {
         const next = new Set(prev);
         next.delete(ticketId);
         return next;
       });
     }
-  }, [tickets, applyOptimisticUpdate, updatingTickets]);
+  };
+
+  // ✅ CRITICAL FIX: Move consolidation logic OUT of useMemo and into useEffect
+  const consolidateTickets = useCallback(async () => {
+    if (processingConsolidation) {
+      console.log('Consolidation already in progress, skipping');
+      return;
+    }
+
+    const unassigned = tickets.filter(t => !t.assigned_user && t.date === null);
+    const ticketGroups = new Map();
+    
+    // Group tickets by base name and category
+    unassigned.forEach(ticket => {
+      if (ticket.type !== 'normal') return;
+
+      const baseName = ticket.ticket?.replace(" (Turnover)", "").trim();
+      const isCurrentTurnover = ticket.ticket?.includes("(Turnover)");
+      const groupKey = `${baseName}|${ticket.category}|${ticket.color_key}`;
+      
+      if (!ticketGroups.has(groupKey)) {
+        ticketGroups.set(groupKey, {
+          originalTickets: [],
+          turnoverTickets: [],
+          baseName,
+          category: ticket.category,
+          colorKey: ticket.color_key
+        });
+      }
+      
+      const group = ticketGroups.get(groupKey);
+      if (isCurrentTurnover) {
+        group.turnoverTickets.push(ticket);
+      } else {
+        group.originalTickets.push(ticket);
+      }
+    });
+
+    // Check if any consolidation is needed
+    let needsConsolidation = false;
+    for (const [, group] of ticketGroups) {
+      if ((group.originalTickets.length > 0 && group.turnoverTickets.length > 0) ||
+          group.turnoverTickets.length > 1 ||
+          group.originalTickets.length > 1) {
+        needsConsolidation = true;
+        break;
+      }
+    }
+
+    if (!needsConsolidation) return;
+
+    setProcessingConsolidation(true);
+
+    try {
+      for (const [, group] of ticketGroups) {
+        if (group.originalTickets.length > 0 && group.turnoverTickets.length > 0) {
+          // True merge: original + turnover
+          console.log(`Consolidating original + turnover for "${group.baseName}"`);
+          
+          const originalTicket = group.originalTickets[0];
+          const restoredEstimate = originalTicket.original_estimate || originalTicket.estimate;
+          
+          const consolidatedTicket = {
+            ...originalTicket,
+            estimate: restoredEstimate,
+            ticket: group.baseName,
+            is_turnover: false,
+            // ✅ FIX: Remove the ID to let database generate new one
+            id: undefined
+          };
+
+          const { data: newTicket, error: insertError } = await supabase
+            .from('tickets')
+            .insert([consolidatedTicket])
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Failed to create consolidated ticket:', insertError);
+            continue;
+          }
+
+          // Delete old tickets
+          const ticketsToDelete = [...group.originalTickets, ...group.turnoverTickets];
+          for (const oldTicket of ticketsToDelete) {
+            await supabase.from('tickets').delete().eq('id', oldTicket.id);
+          }
+
+          // Update local state
+          setTickets(prev => {
+            const filtered = prev.filter(t => 
+              !ticketsToDelete.some(old => old.id === t.id)
+            );
+            return [...filtered, newTicket];
+          });
+
+        } else if (group.turnoverTickets.length > 1) {
+          // Multiple turnovers
+          console.log(`Consolidating multiple turnovers for "${group.baseName}"`);
+          
+          const totalTurnoverEstimate = group.turnoverTickets.reduce(
+            (sum, ticket) => sum + (ticket.estimate || 0), 0
+          );
+          
+          const primaryTurnover = group.turnoverTickets[0];
+          const consolidatedTurnover = {
+            ...primaryTurnover,
+            ticket: `${group.baseName} (Turnover)`,
+            estimate: totalTurnoverEstimate,
+            is_turnover: true,
+            // ✅ FIX: Remove the ID to let database generate new one
+            id: undefined
+          };
+
+          const { data: newTurnover, error: insertError } = await supabase
+            .from('tickets')
+            .insert([consolidatedTurnover])
+            .select()
+            .single();
+
+          if (insertError) {
+            console.error('Failed to create consolidated turnover:', insertError);
+            continue;
+          }
+
+          // Delete old turnovers
+          for (const oldTurnover of group.turnoverTickets) {
+            await supabase.from('tickets').delete().eq('id', oldTurnover.id);
+          }
+
+          // Update local state
+          setTickets(prev => {
+            const filtered = prev.filter(t => 
+              !group.turnoverTickets.some(old => old.id === t.id)
+            );
+            return [...filtered, newTurnover];
+          });
+
+        } else if (group.originalTickets.length > 1) {
+          // Multiple originals - delete duplicates
+          console.log(`Removing duplicate originals for "${group.baseName}"`);
+          
+          for (let i = 1; i < group.originalTickets.length; i++) {
+            const duplicate = group.originalTickets[i];
+            await supabase.from('tickets').delete().eq('id', duplicate.id);
+          }
+
+          setTickets(prev => prev.filter(t => 
+            !group.originalTickets.slice(1).some(dup => dup.id === t.id)
+          ));
+        }
+      }
+    } catch (error) {
+      console.error('Error during consolidation:', error);
+    } finally {
+      setProcessingConsolidation(false);
+    }
+  }, [tickets, setTickets, processingConsolidation]);
+
+  // ✅ CRITICAL FIX: Use useEffect instead of useMemo for consolidation
+  useEffect(() => {
+    // Only run consolidation on ticket changes, with a small debounce
+    const timer = setTimeout(() => {
+      consolidateTickets();
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [tickets.length, selectedDate]); // Only trigger on ticket count changes
 
   const handleDrop = async (e) => {
     e.preventDefault();
@@ -281,8 +367,6 @@ function TicketLobby({
         start_index: ticket.start_index,
         date: ticket.date
       });
-    } else {
-      console.log(`Successfully returned '${ticket.ticket}' to persistent lobby.`);
     }
   };
 
@@ -302,8 +386,6 @@ function TicketLobby({
     if (error) {
       console.error("Failed to delete ticket:", error.message);
       setTickets(prev => [...prev, ticket]);
-    } else {
-      console.log(`Successfully deleted '${ticket.ticket}'`);
     }
   };
 
@@ -311,17 +393,12 @@ function TicketLobby({
     e.preventDefault();
     e.stopPropagation();
     
-    if (e.stopImmediatePropagation) {
-      e.stopImmediatePropagation();
-    }
-    
     if (!ticket || !ticket.link) {
       alert('No link available for this ticket');
       return;
     }
     
     const linkValue = ticket.link.toString().trim();
-    
     if (linkValue === '') {
       alert('This ticket has an empty link');
       return;
@@ -329,204 +406,45 @@ function TicketLobby({
     
     try {
       let url = linkValue;
-      
       if (!url.startsWith('http://') && !url.startsWith('https://')) {
         url = 'https://' + url;
       }
       
       const newWindow = window.open(url, '_blank', 'noopener,noreferrer');
-      
       if (!newWindow) {
         const confirmed = confirm(`Popup blocked! Open ${url} in current tab?`);
         if (confirmed) {
           window.location.href = url;
         }
       }
-      
     } catch (error) {
       console.error('Error in handleLinkClick:', error);
       alert('Error opening link: ' + error.message);
     }
   };
 
-  // FIXED: More stable merging logic with better duplicate detection
-  const mergedTickets = React.useMemo(() => {
-    console.log('Merging tickets - Starting with:', tickets.length, 'tickets');
+  // ✅ CRITICAL FIX: Simple display logic - NO database operations in render
+  const displayTickets = React.useMemo(() => {
+    console.log('Displaying tickets - Starting with:', tickets.length, 'tickets');
     
     const unassigned = tickets.filter(t => !t.assigned_user && t.date === null);
-    console.log('Unassigned tickets for merging:', unassigned.length);
+    console.log('Unassigned tickets for display:', unassigned.length);
     
-    const merged = [];
-    const processedIds = new Set();
-
-    const ticketGroups = new Map();
-    
-    unassigned.forEach(ticket => {
-      if (processedIds.has(ticket.id)) {
-        return;
+    // Simple deduplication for display only - no database operations
+    const seen = new Set();
+    const deduplicated = unassigned.filter(ticket => {
+      const key = `${ticket.ticket}-${ticket.category}-${ticket.estimate}`;
+      if (seen.has(key)) {
+        return false;
       }
-
-      if (ticket.type !== 'normal') {
-        merged.push(ticket);
-        processedIds.add(ticket.id);
-        return;
-      }
-
-      const baseName = ticket.ticket?.replace(" (Turnover)", "").trim();
-      const isCurrentTurnover = ticket.ticket?.includes("(Turnover)");
-      
-      const groupKey = `${baseName}|${ticket.category}|${ticket.color_key}`;
-      
-      if (!ticketGroups.has(groupKey)) {
-        ticketGroups.set(groupKey, {
-          originalTickets: [],
-          turnoverTickets: [],
-          baseName,
-          category: ticket.category,
-          colorKey: ticket.color_key
-        });
-      }
-      
-      const group = ticketGroups.get(groupKey);
-      
-      if (isCurrentTurnover) {
-        group.turnoverTickets.push(ticket);
-      } else {
-        group.originalTickets.push(ticket);
-      }
-      
-      processedIds.add(ticket.id);
+      seen.add(key);
+      return true;
     });
 
-    for (const [groupKey, group] of ticketGroups) {
-      if (group.originalTickets.length > 0 && group.turnoverTickets.length > 0) {
-        // True merge case - consolidate original + turnover
-        const originalTicket = group.originalTickets[0];
-        const restoredEstimate = originalTicket.original_estimate || originalTicket.estimate;
-        
-        const consolidatedTicket = {
-          ...originalTicket,
-          estimate: restoredEstimate,
-          ticket: group.baseName,
-          is_turnover: false
-        };
-        
-        // FIXED: Async consolidation without blocking the UI
-        (async () => {
-          try {
-            const { data: newTicket, error: insertError } = await supabase
-              .from('tickets')
-              .insert([consolidatedTicket])
-              .select()
-              .single();
-
-            if (insertError) {
-              console.error('Failed to create consolidated ticket:', insertError);
-              return;
-            }
-
-            const ticketsToDelete = [...group.originalTickets, ...group.turnoverTickets];
-            for (const oldTicket of ticketsToDelete) {
-              await supabase.from('tickets').delete().eq('id', oldTicket.id);
-            }
-
-            setTickets(prev => {
-              const filtered = prev.filter(t => 
-                !ticketsToDelete.some(old => old.id === t.id)
-              );
-              return [...filtered, newTicket];
-            });
-
-          } catch (error) {
-            console.error('Error in true merge consolidation:', error);
-          }
-        })();
-
-        merged.push(consolidatedTicket);
-
-      } else if (group.turnoverTickets.length > 1) {
-        // Multiple turnovers - consolidate them
-        const totalTurnoverEstimate = group.turnoverTickets.reduce(
-          (sum, ticket) => sum + (ticket.estimate || 0), 0
-        );
-        
-        const primaryTurnover = group.turnoverTickets[0];
-        const consolidatedTurnover = {
-          ...primaryTurnover,
-          ticket: `${group.baseName} (Turnover)`,
-          estimate: totalTurnoverEstimate,
-          is_turnover: true
-        };
-
-        // FIXED: Async consolidation
-        (async () => {
-          try {
-            const { data: newTurnover, error: insertError } = await supabase
-              .from('tickets')
-              .insert([consolidatedTurnover])
-              .select()
-              .single();
-
-            if (insertError) {
-              console.error('Failed to create consolidated turnover:', insertError);
-              return;
-            }
-
-            for (const oldTurnover of group.turnoverTickets) {
-              await supabase.from('tickets').delete().eq('id', oldTurnover.id);
-            }
-
-            setTickets(prev => {
-              const filtered = prev.filter(t => 
-                !group.turnoverTickets.some(old => old.id === t.id)
-              );
-              return [...filtered, newTurnover];
-            });
-
-          } catch (error) {
-            console.error('Error in turnover consolidation:', error);
-          }
-        })();
-
-        merged.push(consolidatedTurnover);
-
-      } else if (group.originalTickets.length > 1) {
-        // Multiple originals - keep first, delete duplicates
-        const primaryOriginal = group.originalTickets[0];
-        
-        (async () => {
-          try {
-            for (let i = 1; i < group.originalTickets.length; i++) {
-              const duplicate = group.originalTickets[i];
-              await supabase.from('tickets').delete().eq('id', duplicate.id);
-            }
-
-            setTickets(prev => prev.filter(t => 
-              !group.originalTickets.slice(1).some(dup => dup.id === t.id)
-            ));
-
-          } catch (error) {
-            console.error('Error consolidating originals:', error);
-          }
-        })();
-
-        merged.push(primaryOriginal);
-
-      } else {
-        // Single ticket - add as is
-        if (group.originalTickets.length > 0) {
-          merged.push(group.originalTickets[0]);
-        }
-        if (group.turnoverTickets.length > 0) {
-          merged.push(group.turnoverTickets[0]);
-        }
-      }
-    }
-
-    console.log(`Merging complete: ${unassigned.length} → ${merged.length} tickets`);
+    console.log(`Display tickets: ${unassigned.length} → ${deduplicated.length} after deduplication`);
     
-    return merged;
-  }, [tickets, setTickets]);
+    return deduplicated;
+  }, [tickets]);
 
   return (
     <div
@@ -535,7 +453,7 @@ function TicketLobby({
       onDragOver={(e) => e.preventDefault()}
       onDrop={handleDrop}
     >
-      {mergedTickets.map(t => {
+      {displayTickets.map(t => {
         const category = t.category?.toLowerCase();
         const isDesign = category === 'design';
         const isProduction = category === 'production';
@@ -585,7 +503,21 @@ function TicketLobby({
         );
       })}
 
-      {/* Trash dropzone */}
+      {processingConsolidation && (
+        <div className="consolidation-indicator" style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          background: 'rgba(0, 0, 0, 0.8)',
+          color: 'white',
+          padding: '5px 10px',
+          borderRadius: '4px',
+          fontSize: '12px'
+        }}>
+          Consolidating tickets...
+        </div>
+      )}
+
       <div
         className="trash-dropzone"
         onDragOver={(e) => e.preventDefault()}
