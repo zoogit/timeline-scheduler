@@ -1,5 +1,5 @@
 // src/components/TicketLobby.jsx
-// QUICK FIX: Disable consolidation to stop database errors
+// Manual drag-to-merge consolidation system
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles.css';
@@ -133,8 +133,113 @@ function TicketLobby({
   applyOptimisticDelete
 }) {
   const [updatingTickets, setUpdatingTickets] = useState(new Set());
-  // ✅ Keep processing state but won't be used
-  const [processingConsolidation, setProcessingConsolidation] = useState(false);
+  const [merging, setMerging] = useState(false);
+  const [dragOverTicket, setDragOverTicket] = useState(null);
+  const [canMerge, setCanMerge] = useState(false);
+
+  // Helper function to get base ticket name (without "(Turnover)" suffix)
+  const getBaseTicketName = (ticketName) => {
+    return ticketName.replace(/\s*\(Turnover\)\s*$/, '').trim();
+  };
+
+  // Helper function to check if ticket is a turnover
+  const isTurnoverTicket = (ticketName) => {
+    return ticketName.includes('(Turnover)');
+  };
+
+  // Check if two tickets can be merged
+  const canTicketsMerge = (draggedTicket, targetTicket) => {
+    if (!draggedTicket || !targetTicket || draggedTicket.id === targetTicket.id) {
+      return false;
+    }
+    
+    const draggedBase = getBaseTicketName(draggedTicket.ticket);
+    const targetBase = getBaseTicketName(targetTicket.ticket);
+    
+    return draggedBase === targetBase;
+  };
+
+  // Perform the merge operation
+  const mergeTickets = async (sourceTicket, targetTicket) => {
+    if (!canTicketsMerge(sourceTicket, targetTicket)) {
+      return;
+    }
+
+    setMerging(true);
+    console.log('Merging tickets:', sourceTicket.ticket, 'into', targetTicket.ticket);
+
+    try {
+      const sourceIsTurnover = isTurnoverTicket(sourceTicket.ticket);
+      const targetIsTurnover = isTurnoverTicket(targetTicket.ticket);
+      
+      let mergedTicket;
+      
+      if (sourceIsTurnover && targetIsTurnover) {
+        // Both turnovers: Add estimates, keep turnover status
+        mergedTicket = {
+          ...targetTicket,
+          estimate: (sourceTicket.estimate || 1) + (targetTicket.estimate || 1),
+          original_estimate: targetTicket.original_estimate || targetTicket.estimate || 1
+        };
+      } else if (sourceIsTurnover || targetIsTurnover) {
+        // One is turnover, one is original: Restore original estimate and name
+        const originalTicket = sourceIsTurnover ? targetTicket : sourceTicket;
+        const turnoverTicket = sourceIsTurnover ? sourceTicket : targetTicket;
+        
+        mergedTicket = {
+          ...targetTicket,
+          ticket: getBaseTicketName(originalTicket.ticket), // Remove (Turnover) suffix
+          estimate: turnoverTicket.original_estimate || originalTicket.estimate || 1,
+          original_estimate: turnoverTicket.original_estimate || originalTicket.estimate || 1,
+          is_turnover: false
+        };
+      } else {
+        // Both are originals: Keep target, use its estimate
+        mergedTicket = {
+          ...targetTicket,
+          estimate: targetTicket.estimate || 1,
+          original_estimate: targetTicket.original_estimate || targetTicket.estimate || 1
+        };
+      }
+
+      // Apply optimistic update first
+      applyOptimisticUpdate(targetTicket.id, mergedTicket);
+      applyOptimisticDelete(sourceTicket.id);
+
+      // Update target ticket in database
+      const { error: updateError } = await supabase
+        .from('tickets')
+        .update({
+          ticket: mergedTicket.ticket,
+          estimate: mergedTicket.estimate,
+          original_estimate: mergedTicket.original_estimate,
+          is_turnover: mergedTicket.is_turnover || false
+        })
+        .eq('id', targetTicket.id);
+
+      if (updateError) throw updateError;
+
+      // Delete source ticket from database
+      const { error: deleteError } = await supabase
+        .from('tickets')
+        .delete()
+        .eq('id', sourceTicket.id);
+
+      if (deleteError) throw deleteError;
+
+      console.log('Successfully merged tickets');
+
+    } catch (error) {
+      console.error('Failed to merge tickets:', error);
+      alert('Failed to merge tickets. Please try again.');
+      
+      // Revert optimistic updates
+      applyOptimisticUpdate(targetTicket.id, targetTicket);
+      setTickets(prev => [...prev, sourceTicket]);
+    } finally {
+      setMerging(false);
+    }
+  };
 
   const handleUpdateEstimate = async (ticketId, newEstimate) => {
     setUpdatingTickets(prev => new Set([...prev, ticketId]));
@@ -172,29 +277,29 @@ function TicketLobby({
     }
   };
 
-  // ✅ QUICK FIX: Disable consolidation completely
-  const consolidateTickets = useCallback(async () => {
-    // DISABLED: Ticket consolidation is causing database errors
-    console.log('Ticket consolidation temporarily disabled');
-    return;
-  }, []);
-
-  // Keep the useEffect but it won't do anything
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      consolidateTickets();
-    }, 100);
-
-    return () => clearTimeout(timer);
-  }, [tickets.length, selectedDate]);
-
   const handleDrop = async (e) => {
     e.preventDefault();
-    const ticket = JSON.parse(e.dataTransfer.getData("application/json"));
+    setDragOverTicket(null);
+    setCanMerge(false);
 
-    console.log(`Returning ticket to lobby:`, ticket.ticket);
+    const draggedTicket = JSON.parse(e.dataTransfer.getData("application/json"));
+    const targetElement = e.target.closest('.ticket-block');
+    
+    if (targetElement) {
+      // Dropped on a ticket - attempt merge
+      const targetTicketId = targetElement.getAttribute('data-ticket-id');
+      const targetTicket = tickets.find(t => t.id === targetTicketId);
+      
+      if (targetTicket && canTicketsMerge(draggedTicket, targetTicket)) {
+        await mergeTickets(draggedTicket, targetTicket);
+        return;
+      }
+    }
 
-    applyOptimisticUpdate(ticket.id, {
+    // Default behavior: return to lobby
+    console.log(`Returning ticket to lobby:`, draggedTicket.ticket);
+
+    applyOptimisticUpdate(draggedTicket.id, {
       assigned_user: null,
       start_index: null,
       date: null
@@ -207,15 +312,58 @@ function TicketLobby({
         start_index: null,
         date: null
       })
-      .eq('id', ticket.id);
+      .eq('id', draggedTicket.id);
 
     if (error) {
       console.error("Failed to return ticket to lobby:", error.message);
-      applyOptimisticUpdate(ticket.id, {
-        assigned_user: ticket.assigned_user,
-        start_index: ticket.start_index,
-        date: ticket.date
+      applyOptimisticUpdate(draggedTicket.id, {
+        assigned_user: draggedTicket.assigned_user,
+        start_index: draggedTicket.start_index,
+        date: draggedTicket.date
       });
+    }
+  };
+
+  const handleDragOver = (e, targetTicket = null) => {
+    e.preventDefault();
+    
+    if (targetTicket) {
+      const draggedData = e.dataTransfer.types.includes('application/json');
+      if (draggedData) {
+        setDragOverTicket(targetTicket.id);
+        
+        // We can't access drag data during dragover, so we'll check during dragenter
+        // For now, just show potential drop zone
+        setCanMerge(true);
+      }
+    } else {
+      setDragOverTicket(null);
+      setCanMerge(false);
+    }
+  };
+
+  const handleDragEnter = (e, targetTicket) => {
+    e.preventDefault();
+    
+    try {
+      // Try to peek at drag data to validate merge possibility
+      const dragData = e.dataTransfer.getData("application/json");
+      if (dragData) {
+        const draggedTicket = JSON.parse(dragData);
+        const canMergeTickets = canTicketsMerge(draggedTicket, targetTicket);
+        setCanMerge(canMergeTickets);
+      }
+    } catch (error) {
+      // DataTransfer data might not be available during dragenter
+      // Visual feedback will be generic
+    }
+  };
+
+  const handleDragLeave = (e) => {
+    // Only clear if leaving the ticket entirely
+    if (!e.currentTarget.contains(e.relatedTarget)) {
+      setDragOverTicket(null);
+      setCanMerge(false);
     }
   };
 
@@ -272,14 +420,13 @@ function TicketLobby({
     }
   };
 
-  // ✅ SIMPLE FIX: Just show all unassigned tickets without any processing
+  // Simple display: show all unassigned tickets without processing
   const displayTickets = React.useMemo(() => {
     console.log('Displaying tickets - Starting with:', tickets.length, 'tickets');
     
     const unassigned = tickets.filter(t => !t.assigned_user && t.date === null);
     console.log('Unassigned tickets for display:', unassigned.length);
     
-    // No consolidation or deduplication - just show all tickets as-is
     return unassigned;
   }, [tickets]);
 
@@ -287,15 +434,22 @@ function TicketLobby({
     <div
       id="tickets-area"
       className="ticket-lobby"
-      onDragOver={(e) => e.preventDefault()}
+      onDragOver={(e) => handleDragOver(e)}
       onDrop={handleDrop}
     >
+      {merging && (
+        <div className="merge-indicator">
+          Merging tickets...
+        </div>
+      )}
+      
       {displayTickets.map(t => {
         const category = t.category?.toLowerCase();
         const isDesign = category === 'design';
         const isProduction = category === 'production';
         const isSP = category === 'sp';
         const isSpecial = t.type !== 'normal';
+        const isDragTarget = dragOverTicket === t.id;
 
         const className = isSpecial
           ? 'special'
@@ -306,11 +460,18 @@ function TicketLobby({
         return (
           <div
             key={t.id}
-            className={`ticket-block ${className}`}
+            data-ticket-id={t.id}
+            className={`ticket-block ${className} ${
+              isDragTarget ? (canMerge ? 'merge-target-valid' : 'merge-target-invalid') : ''
+            }`}
             draggable={true}
             onDragStart={(e) => {
               e.dataTransfer.setData("application/json", JSON.stringify(t));
             }}
+            onDragOver={(e) => handleDragOver(e, t)}
+            onDragEnter={(e) => handleDragEnter(e, t)}
+            onDragLeave={handleDragLeave}
+            title={isDragTarget && canMerge ? `Drop here to merge with ${t.ticket}` : undefined}
           >
             <div className="ticket-content">
               {t.link && t.link.trim() !== '' ? (
@@ -336,6 +497,12 @@ function TicketLobby({
                 isUpdating={updatingTickets.has(t.id)}
               />
             </div>
+            
+            {isDragTarget && (
+              <div className={`merge-indicator ${canMerge ? 'valid' : 'invalid'}`}>
+                {canMerge ? '🔗 Merge' : '❌ Cannot merge'}
+              </div>
+            )}
           </div>
         );
       })}
