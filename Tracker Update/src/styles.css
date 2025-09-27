@@ -1814,7 +1814,7 @@ body {
 .ticket-block.turnover-design,
 .ticket-block.turnover-production,
 .ticket-block.turnover-sp {
-  border-left: 4px solid #ff9800;
+  border-left: 0px solid #ff9800;
 }
 
 /* Ensure merge targets are clearly visible */
@@ -1843,5 +1843,6 @@ body {
   content: "⏳";
   margin-left: 4px;
 }
+
 
 
