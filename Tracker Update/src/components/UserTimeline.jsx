@@ -852,7 +852,7 @@ function UserTimeline({
 
         console.log(`Creating turnover ticket:`, turnoverTicketData);
 
-        // Insert into database first to avoid race conditions
+        // Insert into database - let real-time listener handle UI updates
         const { data: newTurnover, error: insertError } = await supabase
           .from('tickets')
           .insert([turnoverTicketData])
@@ -865,13 +865,10 @@ function UserTimeline({
 
         if (newTurnover && newTurnover[0]) {
           console.log(`Database returned turnover:`, newTurnover[0]);
-          
-          // Add to local state
-          setTickets((prev) => [...prev, newTurnover[0]]);
-
           console.log(
             `Successfully created turnover: "${newTurnover[0].ticket}" (${overflowHours}h) in lobby`
           );
+          // Don't add to local state - let the real-time listener handle it
         }
       }
 
