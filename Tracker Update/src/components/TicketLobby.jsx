@@ -179,18 +179,24 @@ function TicketLobby({
         mergedTicket = {
           ...targetTicket,
           estimate: (sourceTicket.estimate || 1) + (targetTicket.estimate || 1),
-          original_estimate: targetTicket.original_estimate || targetTicket.estimate || 1
+          original_estimate: Math.max(
+            sourceTicket.original_estimate || sourceTicket.estimate || 1,
+            targetTicket.original_estimate || targetTicket.estimate || 1
+          )
         };
       } else if (sourceIsTurnover || targetIsTurnover) {
         // One is turnover, one is original: Restore original estimate and name
         const originalTicket = sourceIsTurnover ? targetTicket : sourceTicket;
         const turnoverTicket = sourceIsTurnover ? sourceTicket : targetTicket;
         
+        // Calculate total estimate: original + turnover
+        const totalEstimate = (originalTicket.estimate || 1) + (turnoverTicket.estimate || 1);
+        
         mergedTicket = {
           ...targetTicket,
           ticket: getBaseTicketName(originalTicket.ticket), // Remove (Turnover) suffix
-          estimate: turnoverTicket.original_estimate || originalTicket.estimate || 1,
-          original_estimate: turnoverTicket.original_estimate || originalTicket.estimate || 1,
+          estimate: totalEstimate, // Combined estimate
+          original_estimate: totalEstimate, // This becomes the new original
           is_turnover: false
         };
       } else {
@@ -202,36 +208,76 @@ function TicketLobby({
         };
       }
 
+      console.log('Merge calculation:', {
+        source: { ticket: sourceTicket.ticket, estimate: sourceTicket.estimate, isTurnover: sourceIsTurnover },
+        target: { ticket: targetTicket.ticket, estimate: targetTicket.estimate, isTurnover: targetIsTurnover },
+        result: { ticket: mergedTicket.ticket, estimate: mergedTicket.estimate }
+      });
+
       // Apply optimistic update first
       applyOptimisticUpdate(targetTicket.id, mergedTicket);
       applyOptimisticDelete(sourceTicket.id);
 
-      // Update target ticket in database
-      const { error: updateError } = await supabase
-        .from('tickets')
-        .update({
-          ticket: mergedTicket.ticket,
-          estimate: mergedTicket.estimate,
-          original_estimate: mergedTicket.original_estimate,
-          is_turnover: mergedTicket.is_turnover || false
-        })
-        .eq('id', targetTicket.id);
+      // Update target ticket in database with retry logic
+      let updateSuccess = false;
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { error: updateError } = await supabase
+          .from('tickets')
+          .update({
+            ticket: mergedTicket.ticket,
+            estimate: mergedTicket.estimate,
+            original_estimate: mergedTicket.original_estimate,
+            is_turnover: mergedTicket.is_turnover || false
+          })
+          .eq('id', targetTicket.id);
 
-      if (updateError) throw updateError;
+        if (!updateError) {
+          updateSuccess = true;
+          break;
+        } else if (attempt === 3) {
+          throw updateError;
+        } else {
+          console.warn(`Update attempt ${attempt} failed, retrying...`, updateError);
+          await new Promise(resolve => setTimeout(resolve, 200 * attempt));
+        }
+      }
 
-      // Delete source ticket from database
-      const { error: deleteError } = await supabase
-        .from('tickets')
-        .delete()
-        .eq('id', sourceTicket.id);
+      if (updateSuccess) {
+        // Delete source ticket from database with retry logic
+        let deleteSuccess = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+          const { error: deleteError } = await supabase
+            .from('tickets')
+            .delete()
+            .eq('id', sourceTicket.id);
 
-      if (deleteError) throw deleteError;
+          if (!deleteError) {
+            deleteSuccess = true;
+            break;
+          } else if (attempt === 3) {
+            throw deleteError;
+          } else {
+            console.warn(`Delete attempt ${attempt} failed, retrying...`, deleteError);
+            await new Promise(resolve => setTimeout(resolve, 200 * attempt));
+          }
+        }
 
-      console.log('Successfully merged tickets');
+        if (deleteSuccess) {
+          console.log('Successfully merged tickets');
+        }
+      }
 
     } catch (error) {
       console.error('Failed to merge tickets:', error);
-      alert('Failed to merge tickets. Please try again.');
+      
+      // More specific error handling
+      if (error.code === '23505') {
+        console.error('Unique constraint violation - tickets might already be merged');
+      } else if (error.code === '23503') {
+        console.error('Foreign key constraint violation');
+      } else {
+        alert('Failed to merge tickets. Please try again.');
+      }
       
       // Revert optimistic updates
       applyOptimisticUpdate(targetTicket.id, targetTicket);
@@ -420,7 +466,61 @@ function TicketLobby({
     }
   };
 
-  // Simple display: show all unassigned tickets without processing
+  // Auto-consolidation check when tickets change
+  const autoConsolidate = useCallback(async () => {
+    const unassigned = tickets.filter(t => !t.assigned_user && t.date === null);
+    
+    // Group tickets by base name
+    const ticketGroups = {};
+    unassigned.forEach(ticket => {
+      const baseName = getBaseTicketName(ticket.ticket);
+      if (!ticketGroups[baseName]) {
+        ticketGroups[baseName] = [];
+      }
+      ticketGroups[baseName].push(ticket);
+    });
+    
+    // Find groups with multiple tickets that should be merged
+    for (const [baseName, group] of Object.entries(ticketGroups)) {
+      if (group.length > 1) {
+        console.log(`Auto-consolidating ${group.length} tickets for "${baseName}"`);
+        
+        // Sort: originals first, then turnovers
+        group.sort((a, b) => {
+          const aIsTurnover = isTurnoverTicket(a.ticket);
+          const bIsTurnover = isTurnoverTicket(b.ticket);
+          if (aIsTurnover && !bIsTurnover) return 1;
+          if (!aIsTurnover && bIsTurnover) return -1;
+          return 0;
+        });
+        
+        // Merge all into the first ticket
+        const targetTicket = group[0];
+        const sourceTickets = group.slice(1);
+        
+        for (const sourceTicket of sourceTickets) {
+          try {
+            await mergeTickets(sourceTicket, targetTicket);
+            // Small delay to prevent overwhelming the database
+            await new Promise(resolve => setTimeout(resolve, 100));
+          } catch (error) {
+            console.error(`Failed to auto-consolidate ${sourceTicket.ticket}:`, error);
+          }
+        }
+      }
+    }
+  }, [tickets, mergeTickets]);
+
+  // Run auto-consolidation when tickets change
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      autoConsolidate();
+    }, 500); // Small delay to batch changes
+
+    return () => clearTimeout(timer);
+  }, [tickets.length]); // Only run when ticket count changes
+
+  // Display tickets after potential consolidation
   const displayTickets = React.useMemo(() => {
     console.log('Displaying tickets - Starting with:', tickets.length, 'tickets');
     
