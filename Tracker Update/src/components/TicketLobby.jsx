@@ -468,7 +468,14 @@ function TicketLobby({
 
   // Auto-consolidation check when tickets change
   const autoConsolidate = useCallback(async () => {
-    const unassigned = tickets.filter(t => !t.assigned_user && t.date === null);
+    const unassigned = tickets.filter(
+        t => !t.assigned_user && 
+            t.date === null &&
+            t.type === 'normal'  // ← NEW: "And only if it's a normal/production ticket"
+);
+// This says: "Get unassigned tickets in lobby that are PRODUCTION type"
+// Special tickets are skipped
+```
     
     // Group tickets by base name
     const ticketGroups = {};
@@ -619,3 +626,4 @@ function TicketLobby({
 }
 
 export default TicketLobby;
+
