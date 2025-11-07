@@ -490,7 +490,7 @@ function TicketLobby({
     // Find groups with multiple tickets that should be merged
     for (const [baseName, group] of Object.entries(ticketGroups)) {
       if (group.length > 1) {
-        console.log('Auto-consolidating ' + group.length + ' tickets for "' + baseName + '"');
+        console.error('Failed to auto-consolidate ' + sourceTicket.ticket + ':', error);
         
         // Sort: originals first, then turnovers
         group.sort((a, b) => {
@@ -626,6 +626,7 @@ function TicketLobby({
 }
 
 export default TicketLobby;
+
 
 
 
