@@ -78,8 +78,21 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
     }
   };
 
-  const handleAddSpecial = async (label) => {
-    console.log('🟣 Adding special ticket to persistent lobby:', label);
+ const handleAddSpecial = async (label) => {
+  console.log('🟣 Adding special ticket to persistent lobby:', label);
+
+  // ✅ NEW: Check if this special ticket already exists
+  const existingSpecial = tickets.find(
+    t => t.ticket === label && 
+         t.type === 'break' && 
+         !t.assigned_user && 
+         t.date === null
+  );
+  
+  if (existingSpecial) {
+    alert(`A "${label}" ticket already exists in the lobby.`);
+    return;
+  }
 
     // ✅ FIXED: Include original_estimate for special tickets too
     const specialTicketData = {
@@ -200,3 +213,4 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
 }
 
 export default TicketForm;
+
