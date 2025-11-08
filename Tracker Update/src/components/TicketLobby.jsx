@@ -473,9 +473,6 @@ function TicketLobby({
             t.date === null &&
             t.type === 'normal'
   );
-// This says: "Get unassigned tickets in lobby that are PRODUCTION type"
-// Special tickets are skipped
-```
     
     // Group tickets by base name
     const ticketGroups = {};
@@ -620,6 +617,7 @@ function TicketLobby({
 }
 
 export default TicketLobby;
+
 
 
 
