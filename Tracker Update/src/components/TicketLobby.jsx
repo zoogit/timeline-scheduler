@@ -489,33 +489,27 @@ function TicketLobby({
     
     // Find groups with multiple tickets that should be merged
     for (const [baseName, group] of Object.entries(ticketGroups)) {
-      if (group.length > 1) {
-        console.error('Failed to auto-consolidate ' + sourceTicket.ticket + ':', error);
-        
-        // Sort: originals first, then turnovers
-        group.sort((a, b) => {
-          const aIsTurnover = isTurnoverTicket(a.ticket);
-          const bIsTurnover = isTurnoverTicket(b.ticket);
-          if (aIsTurnover && !bIsTurnover) return 1;
-          if (!aIsTurnover && bIsTurnover) return -1;
-          return 0;
-        });
-        
-        // Merge all into the first ticket
-        const targetTicket = group[0];
-        const sourceTickets = group.slice(1);
-        
-        for (const sourceTicket of sourceTickets) {
-          try {
-            await mergeTickets(sourceTicket, targetTicket);
-            // Small delay to prevent overwhelming the database
-            await new Promise(resolve => setTimeout(resolve, 100));
-          } catch (error) {
-            console.error(`Failed to auto-consolidate ${sourceTicket.ticket}:`, error);
-          }
-        }
+  if (group.length > 1) {
+    // Removed the broken console.error line here! 👍
+    
+    // Sort: originals first, then turnovers
+    group.sort((a, b) => {
+      // ...sorting logic...
+    });
+
+    const targetTicket = group[0];
+    const sourceTickets = group.slice(1);
+
+    for (const sourceTicket of sourceTickets) {
+      try {
+        await mergeTickets(sourceTicket, targetTicket);
+        await new Promise(resolve => setTimeout(resolve, 100));
+      } catch (error) {
+        console.error(`Failed to auto-consolidate ${sourceTicket.ticket}:`, error); // ✅ This is good—sourceTicket and error are defined!
       }
     }
+  }
+}
   }, [tickets, mergeTickets]);
 
   // Run auto-consolidation when tickets change
@@ -626,6 +620,7 @@ function TicketLobby({
 }
 
 export default TicketLobby;
+
 
 
 
