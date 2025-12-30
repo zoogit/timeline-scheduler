@@ -27,7 +27,6 @@ const SHIFT_WINDOWS = {
   Jane: { start: 16, end: 34 }, // 8am-4pm PST
   Melanie: { start: 16, end: 32 }, // 8am-4pm PST
   Paulina: { start: 16, end: 34 }, // 8am-4pm PST
-  Rose: { start: 16, end: 34 }, // 8am-4pm PST
   Toby: { start: 16, end: 32 }, // 8am-4pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
@@ -1594,4 +1593,5 @@ function UserTimeline({
 }
 
 export default UserTimeline;
+
 
