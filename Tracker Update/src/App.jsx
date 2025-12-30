@@ -32,7 +32,6 @@ const TEAMS = {
     'Solveiga',
   ],
   Day: [
-    'Ade',
     'Claire',
     'Gabrielle',
     'Jane',
@@ -1276,3 +1275,4 @@ function App() {
 }
 
 export default App;
+
