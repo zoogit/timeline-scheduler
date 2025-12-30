@@ -21,8 +21,7 @@ const SHIFT_WINDOWS = {
   Simona: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
-  // Ade, Claire, Gabrielle, Jane, Melanie, Paulina, Rose, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
-  Ade: { start: 16, end: 32 }, // 8am-4pm PST
+  // Claire, Gabrielle, Jane, Melanie, Paulina, Rose, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
   Claire: { start: 16, end: 32 }, // 8am-4pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
   Jane: { start: 16, end: 34 }, // 8am-4pm PST
@@ -1595,3 +1594,4 @@ function UserTimeline({
 }
 
 export default UserTimeline;
+
