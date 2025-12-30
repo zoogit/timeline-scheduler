@@ -38,7 +38,6 @@ const TEAMS = {
     'Melanie',
     'Nousha',
     'Paulina',
-    'Rose',
     'Stephanie',
     'Susan',
     'Toby',
@@ -1275,4 +1274,5 @@ function App() {
 }
 
 export default App;
+
 
