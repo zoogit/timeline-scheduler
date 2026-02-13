@@ -44,7 +44,7 @@ const TEAMS = {
     'Victoria',
   ],
   Night: ['Ashley', 'Doue', 'Danissa', 'Matt', 'Marie', 'Shaida'],
-  SP: ['Beth', 'James', 'Lisa', 'Sophia', 'Jessica'],
+  SP: ['Beth', 'James', 'Sophia', 'Lisa' ],
 };
 
 const SHIFT_CONFIG = {
@@ -1274,5 +1274,6 @@ function App() {
 }
 
 export default App;
+
 
 
