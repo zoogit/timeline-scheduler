@@ -78,21 +78,54 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
     }
   };
 
- const handleAddSpecial = async (label) => {
-  console.log('🟣 Adding special ticket to persistent lobby:', label);
+  const handleAddCBT = async () => {
+    if (!ticket || !link) {
+      alert('Please enter a Ticket # and Link before using CBT.');
+      return;
+    }
 
-  // ✅ NEW: Check if this special ticket already exists
-  const existingSpecial = tickets.find(
-    t => t.ticket === label && 
-         t.type === 'break' && 
-         !t.assigned_user && 
-         t.date === null
-  );
-  
-  if (existingSpecial) {
-    alert(`A "${label}" ticket already exists in the lobby.`);
-    return;
-  }
+    const cbtTicketData = {
+      ticket,
+      link,
+      estimate: 6,
+      original_estimate: 6,
+      assigned_user: null,
+      start_index: null,
+      type: 'normal',
+      category: 'Design',
+      date: null,
+      is_turnover: false,
+      color_key: ticket,
+    };
+
+    try {
+      const { error } = await supabase
+        .from('tickets')
+        .insert([cbtTicketData])
+        .select();
+
+      if (error) {
+        console.error('❌ Error inserting CBT ticket:', error.message);
+        alert(`Failed to create CBT ticket: ${error.message}`);
+      } else {
+        setTicket('');
+        setLink('');
+        setEstimate(1);
+
+        const { data: updated, error: fetchError } = await supabase
+          .from('tickets')
+          .select('*')
+          .or(`date.eq.${selectedDate},date.is.null`);
+        if (!fetchError) setTickets(updated);
+      }
+    } catch (error) {
+      console.error('❌ Unexpected error in handleAddCBT:', error);
+      alert(`Unexpected error: ${error.message}`);
+    }
+  };
+
+  const handleAddSpecial = async (label) => {
+    console.log('🟣 Adding special ticket to persistent lobby:', label);
 
     // ✅ FIXED: Include original_estimate for special tickets too
     const specialTicketData = {
@@ -172,6 +205,15 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
         required
       />
 
+      {/* CBT quick-create button */}
+      <button
+        className="category-btn cbt"
+        onClick={handleAddCBT}
+        title="Create 6-hour Design ticket"
+      >
+        CBT
+      </button>
+
       {/* ✅ Three separate category buttons */}
       <div className="category-buttons">
         <button
@@ -213,4 +255,3 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
 }
 
 export default TicketForm;
-
