@@ -57,7 +57,7 @@ const SHIFT_CONFIG = {
 const VIEW_ALL_TEAM_CONFIG = {
   London: { startHour: 0, startIndexOffset: 0 },
   Day: { startHour: 6, startIndexOffset: 12 },
-  Night: { startHour: 11, startIndexOffset: 24 },
+  Night: { startHour: 11, startIndexOffset: 27 },
   SP: { startHour: 0, startIndexOffset: 0 },
 };
 
@@ -1274,6 +1274,7 @@ function App() {
 }
 
 export default App;
+
 
 
 
