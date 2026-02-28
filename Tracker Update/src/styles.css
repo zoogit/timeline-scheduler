@@ -1844,4 +1844,20 @@ body {
   margin-left: 4px;
 }
 
+.category-btn.cbt {                                                   
+  background-color: #1a6b3a;                                          
+  color: white;                                                       
+  border: none;                                                       
+  border-radius: 4px;                                                 
+  cursor: pointer;                                                    
+  letter-spacing: 0.05em;                                             
+  }                                                                     
+  
+.category-btn.cbt:hover {                                             
+ background-color: #145530;                                          
+ }                                                                     
+ 
+.category-btn:hover:not(.active) {
+  background-color: #5a6268;
+  }
 
