@@ -1854,10 +1854,11 @@ body {
   }                                                                     
   
 .category-btn.cbt:hover {                                             
- background-color: yellow;
-  color: black;
+ background-color: #ee9f27;
+  color: white;
  }                                                                     
  
+
 
 
 
