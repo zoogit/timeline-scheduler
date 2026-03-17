@@ -47,7 +47,7 @@ const TEAMS = {
 };
 
 const SHIFT_CONFIG = {
-  London: { startHour: 0, blockCount: 18 },
+  London: { startHour: 0, blockCount: 20 },
   Day: { startHour: 6, blockCount: 22 },
   Night: { startHour: 11, blockCount: 26 },
   SP: { startHour: 0, blockCount: 32 },
