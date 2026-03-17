@@ -56,10 +56,10 @@ const SHIFT_WINDOWS = {
   Beth: { start: 14, end: 32 }, // 8am-4pm PST
 
   // James: 1AM-8:30AM PST (2-18) - Early morning coverage
-  James: { start: 2, end: 18 }, // 1am-8:30am PST
+  James: { start: 4, end: 22 }, // 1am-8:30am PST
 
   // Sophia: 12AM-7:30AM PST (0-15) - Overnight coverage
-  Sophia: { start: 0, end: 16 }, // 12am-7:30am PST
+  Sophia: { start: 2, end: 20 }, // 12am-7:30am PST
   
   // Lisa: 1AM-8:30AM PST (2-18) - Early morning coverage
   Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
