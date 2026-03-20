@@ -362,11 +362,14 @@ function UserTimeline({
         reason: isOff ? '' : 'Off',
       });
 
+      // Cover slots have inverted DB semantics (record = on, no record = off)
+      // so we pass isOff instead of !isOff for them
+      const dbValue = isCoverSlot ? isOff : !isOff;
       const result = await setUserOffDay(
         user,
         selectedDate,
-        !isOff,
-        isOff ? '' : 'Off'
+        dbValue,
+        dbValue ? 'Off' : ''
       );
 
       console.log('📦 setUserOffDay result:', result);
