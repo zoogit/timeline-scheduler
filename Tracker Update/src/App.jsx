@@ -43,7 +43,8 @@ const TEAMS = {
     'Victoria',
   ],
   Night: ['Ashley', 'Doue', 'Danissa', 'Matt', 'Marie', 'Shaida'],
-  SP: ['Beth', 'James', 'Sophia', 'Lisa' ],
+  SP: ['Beth', 'James', 'Sophia', 'Lisa'],
+  Weekend: ['Lam', 'Cover 1', 'Sendrine', 'Cover 2', 'Isidora', 'Cover 3'],
 };
 
 const SHIFT_CONFIG = {
@@ -51,6 +52,8 @@ const SHIFT_CONFIG = {
   Day: { startHour: 6, blockCount: 22 },
   Night: { startHour: 11, blockCount: 26 },
   SP: { startHour: 0, blockCount: 32 },
+  // Weekend: 5am–8pm PDT = 12pm–3am GMT, covers all three weekend shifts
+  Weekend: { startHour: 5, blockCount: 30 },
 };
 
 const VIEW_ALL_TEAM_CONFIG = {
@@ -117,6 +120,34 @@ const getBusinessWeekDates = (startDate) => {
   }
 
   return dates;
+};
+
+// Weekend date helper — returns [Saturday, Sunday] for the week containing dateStr
+const getWeekendDates = (dateStr) => {
+  const [yearStr, monthStr, dayStr] = dateStr.split('-');
+  const date = new Date(
+    parseInt(yearStr, 10),
+    parseInt(monthStr, 10) - 1,
+    parseInt(dayStr, 10)
+  );
+  const dayOfWeek = date.getDay(); // 0=Sun, 6=Sat
+
+  const saturday = new Date(date);
+  if (dayOfWeek === 6) {
+    // already Saturday
+  } else if (dayOfWeek === 0) {
+    saturday.setDate(date.getDate() - 1); // Sunday → prev Saturday
+  } else {
+    saturday.setDate(date.getDate() + (6 - dayOfWeek)); // Mon–Fri → upcoming Saturday
+  }
+
+  const sunday = new Date(saturday);
+  sunday.setDate(saturday.getDate() + 1);
+
+  return [saturday, sunday].map(
+    (d) =>
+      `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  );
 };
 
 // ✅ UPDATED: Inline Profile Controls Component with Portal
@@ -397,11 +428,14 @@ function AppContent() {
     }
   }, [appReady]);
 
-  // Update week dates when selectedDate changes
+  // Update week dates when selectedDate or team changes
   useEffect(() => {
-    const newWeekDates = getBusinessWeekDates(selectedDate);
+    const newWeekDates =
+      selectedTeam === 'Weekend'
+        ? getWeekendDates(selectedDate)
+        : getBusinessWeekDates(selectedDate);
     setWeekDates(newWeekDates);
-  }, [selectedDate]);
+  }, [selectedDate, selectedTeam]);
 
   // Calculate display values
   const USERS = TEAMS[selectedTeam] || [];
@@ -531,7 +565,10 @@ function AppContent() {
 
     let newDate = new Date(current);
 
-    if (direction === 'prev') {
+    if (selectedTeam === 'Weekend') {
+      // Jump one full week at a time
+      newDate.setDate(current.getDate() + (direction === 'next' ? 7 : -7));
+    } else if (direction === 'prev') {
       newDate.setDate(current.getDate() - 1);
       if (newDate.getDay() === 0) {
         newDate.setDate(newDate.getDate() - 2);
@@ -957,7 +994,7 @@ function AppContent() {
       {/* Navigation Controls */}
       <div className="day-navigation">
         <button className="day-nav-btn" onClick={() => navigateDay('prev')}>
-          ◀ Previous Day
+          {selectedTeam === 'Weekend' ? '◀ Prev Week' : '◀ Previous Day'}
         </button>
         <div className="current-day-display">
           <div className="day-indicator">
@@ -981,7 +1018,7 @@ function AppContent() {
           </div>
         </div>
         <button className="day-nav-btn" onClick={() => navigateDay('next')}>
-          Next Day ▶
+          {selectedTeam === 'Weekend' ? 'Next Week ▶' : 'Next Day ▶'}
         </button>
       </div>
 
@@ -1058,6 +1095,27 @@ function AppContent() {
         >
           <div className="team-main-name">Special</div>
           <div className="team-sub-name">Projects</div>
+        </button>
+        <button
+          className={`${selectedTeam === 'Weekend' && !viewAll ? 'active' : ''}`}
+          onClick={() => {
+            setSelectedTeam('Weekend');
+            setViewAll(false);
+            // Snap selectedDate to Sat/Sun — if currently a weekday, jump to upcoming Saturday
+            const [y, m, d] = selectedDate.split('-').map(Number);
+            const cur = new Date(y, m - 1, d);
+            const dow = cur.getDay();
+            if (dow !== 6 && dow !== 0) {
+              const sat = new Date(cur);
+              sat.setDate(cur.getDate() + (6 - dow));
+              setSelectedDate(
+                `${sat.getFullYear()}-${String(sat.getMonth() + 1).padStart(2, '0')}-${String(sat.getDate()).padStart(2, '0')}`
+              );
+            }
+          }}
+        >
+          <div className="team-main-name">Weekend</div>
+          <div className="team-sub-name">Sat – Sun</div>
         </button>
         <button
           className={`${viewAll ? 'active' : ''}`}
@@ -1206,6 +1264,7 @@ function AppContent() {
                     canEdit={canEdit}
                     canDelete={canDelete}
                     canManageTeam={canManageTeam}
+                    isCoverSlot={user.startsWith('Cover ')}
                   />
                 ))}
               </>
@@ -1273,11 +1332,3 @@ function App() {
 }
 
 export default App;
-
-
-
-
-
-
-
-
