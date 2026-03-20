@@ -54,11 +54,11 @@ const SHIFT_WINDOWS = {
   // Weekend Team - GMT times, converted to PDT (GMT - 7h). 0 = midnight PDT.
   // Timeline window: 5am–8pm PDT (globalOffset=10, blockCount=30)
   // Lam + Cover 1: 12pm–6pm GMT = 5am–11am PDT (blocks 10–22)
-  Lam: { start: 10, end: 22 },
-  'Cover 1': { start: 10, end: 22 },
+  Lam: { start: 10, end: 26 },
+  'Cover 1': { start: 10, end: 26 },
   // Sendrine + Cover 2: 5pm–1am GMT = 10am–6pm PDT (blocks 20–36); Cover 2 ends 2am GMT = 7pm PDT (38)
   Sendrine: { start: 20, end: 36 },
-  'Cover 2': { start: 20, end: 38 },
+  'Cover 2': { start: 20, end: 36 },
   // Isidora + Cover 3: 7pm–3am GMT = 12pm–8pm PDT (blocks 24–40)
   Isidora: { start: 24, end: 40 },
   'Cover 3': { start: 24, end: 40 },
