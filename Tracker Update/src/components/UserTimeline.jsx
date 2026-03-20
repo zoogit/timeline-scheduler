@@ -51,17 +51,17 @@ const SHIFT_WINDOWS = {
   Danissa: { start: 26, end: 44 }, // 1pm-10pm PST
   Matt: { start: 26, end: 44 }, // 1pm-10pm PST
 
-  // Weekend Team - GMT times, converted to PDT (GMT - 7h). 0 = midnight PDT.
-  // Timeline window: 5am–8pm PDT (globalOffset=10, blockCount=30)
-  // Lam + Cover 1: 12pm–6pm GMT = 5am–11am PDT (blocks 10–22)
-  Lam: { start: 10, end: 26 },
-  'Cover 1': { start: 10, end: 26 },
-  // Sendrine + Cover 2: 5pm–1am GMT = 10am–6pm PDT (blocks 20–36); Cover 2 ends 2am GMT = 7pm PDT (38)
-  Sendrine: { start: 20, end: 36 },
-  'Cover 2': { start: 20, end: 36 },
-  // Isidora + Cover 3: 7pm–3am GMT = 12pm–8pm PDT (blocks 24–40)
-  Isidora: { start: 24, end: 40 },
-  'Cover 3': { start: 24, end: 40 },
+  // Weekend Team - GMT times, converted to PST (GMT - 8h). 0 = midnight PST.
+  // Timeline window: 4am–7pm PST (globalOffset=8, blockCount=30)
+  // Lam + Cover 1: 12pm–6pm GMT = 4am–10am PST (blocks 8–20)
+  Lam: { start: 8, end: 20 },
+  'Cover 1': { start: 8, end: 20 },
+  // Sendrine + Cover 2: 5pm–1am GMT = 9am–5pm PST (blocks 18–34); Cover 2 ends 2am GMT = 6pm PST (36)
+  Sendrine: { start: 18, end: 34 },
+  'Cover 2': { start: 18, end: 36 },
+  // Isidora + Cover 3: 7pm–3am GMT = 11am–7pm PST (blocks 22–38)
+  Isidora: { start: 22, end: 38 },
+  'Cover 3': { start: 22, end: 38 },
 
   // ✅ UPDATED: SP Team - More reasonable working hours
   // Beth: 8AM-4PM PST (16-32) - Standard business hours
@@ -141,18 +141,19 @@ function UserTimeline({
   const isReadOnlyUser = !canEdit; // If they can't edit, they're effectively read-only for UI
 
   // ✅ ENHANCED: Check if this user is off using the hook function
+  // Cover slots are inverted: a DB record means "scheduled/on", no record means "off" (default)
   const isOff = useMemo(() => {
     if (!isUserOff || !user || !selectedDate) {
       console.log(
         `🔍 Cannot check off status - missing: isUserOff=${!!isUserOff}, user=${user}, selectedDate=${selectedDate}`
       );
-      return false;
+      return isCoverSlot ? true : false;
     }
 
     const result = isUserOff(user, selectedDate);
     console.log(`🔍 Checking isOff for ${user} on ${selectedDate}:`, result);
-    return result;
-  }, [isUserOff, selectedDate, user]);
+    return isCoverSlot ? !result : result;
+  }, [isUserOff, selectedDate, user, isCoverSlot]);
 
   // Helper functions
   const isSpecialTicketType = (ticket) => {
@@ -1270,15 +1271,12 @@ function UserTimeline({
     <div className="timeline">
       <div className="timeline-label">
         <span
-          className={`user-name ${isCoverSlot ? 'user-cover' : isOff ? 'user-off' : 'user-on'} ${
+          className={`user-name ${isCoverSlot && !isOff ? 'user-cover' : isOff ? 'user-off' : 'user-on'} ${
             isReadOnlyUser ? 'user-name-readonly' : ''
           }`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
-
-            // Cover slots have no identity — skip off-day toggle
-            if (isCoverSlot) return;
 
             // ✅ CLEAN: Check permission, not role
             if (!canManageTeam) {
@@ -1292,7 +1290,7 @@ function UserTimeline({
             toggleOffState();
           }}
           style={{
-            cursor: isCoverSlot ? 'default' : canManageTeam ? 'pointer' : 'default',
+            cursor: canManageTeam ? 'pointer' : 'default',
             opacity: isReadOnlyUser ? 0.9 : 1,
           }}
           title={
