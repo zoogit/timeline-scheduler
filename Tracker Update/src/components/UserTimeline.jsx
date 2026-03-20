@@ -57,11 +57,11 @@ const SHIFT_WINDOWS = {
   Lam: { start: 8, end: 26 },
   'Cover 1': { start: 8, end: 26 },
   // Sendrine + Cover 2: 5pm–1am GMT = 9am–5pm PST (blocks 18–34); Cover 2 ends 2am GMT = 6pm PST (36)
-  Sendrine: { start: 18, end: 34 },
-  'Cover 2': { start: 18, end: 34 },
+  Sendrine: { start: 20, end: 36 },
+  'Cover 2': { start: 20, end: 36 },
   // Isidora + Cover 3: 7pm–3am GMT = 11am–7pm PST (blocks 22–38)
-  Isidora: { start: 22, end: 38 },
-  'Cover 3': { start: 22, end: 38 },
+  Isidora: { start: 24, end: 40 },
+  'Cover 3': { start: 24, end: 40 },
 
   // ✅ UPDATED: SP Team - More reasonable working hours
   // Beth: 8AM-4PM PST (16-32) - Standard business hours
