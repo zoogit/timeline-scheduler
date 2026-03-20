@@ -2,18 +2,18 @@ import React, { useState, useRef, useMemo } from 'react';
 import '../styles.css';
 import supabase from '../supabaseClient';
 
-// UPDATED: Corrected SHIFT_WINDOWS based on GMT times converted to PST
-// Each position = 30 minutes, 0 = midnight PST
-// GMT to PST conversion: GMT - 8 hours = PST
+// ✅ UPDATED: Corrected SHIFT_WINDOWS based on GMT times converted to PDT
+// Each position = 30 minutes, 0 = midnight PDT
+// GMT to PDT conversion: GMT - 7 hours = PDT (US on PDT, UK still on GMT — DST gap Mar 8–Mar 29)
 const SHIFT_WINDOWS = {
-  // London Team - Convert GMT times to PST (GMT - 8 hours)
-  // Andrew, Mitchell, Nicole, Solveiga: 8AM-3:30PM GMT = 12AM-7:30AM PST (0-15)
+  // London Team - Convert GMT times to PDT (GMT - 7 hours)
+  // Andrew, Mitchell, Nicole, Solveiga: 8AM-4:30PM GMT = 1AM-9:30AM PDT (2-19)
   Andrew: { start: 2, end: 18 }, // 12am-7:30am PST
   Mitchell: { start: 2, end: 18 }, // 12am-7:30am PST
   Nicole: { start: 2, end: 18 }, // 12am-7:30am PST
   Solveiga: { start: 2, end: 18 }, // 12am-7:30am PST
 
-  // Andrei, Bella, Emma, Goldee, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST (2-17)
+  // Andrei, Bella, Emma, Goldee, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
   Andrei: { start: 4, end: 20 }, // 1am-8:30am PST
   Bella: { start: 4, end: 20 }, // 1am-8:30am PST
   Emma: { start: 4, end: 20 }, // 1am-8:30am PST
@@ -21,7 +21,7 @@ const SHIFT_WINDOWS = {
   Simona: { start: 4, end: 20 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
-  // Claire, Gabrielle, Jane, Paulina, Rose, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
+  // Claire, Gabrielle, Jane, Paulina, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
   Claire: { start: 16, end: 32 }, // 8am-4pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
   Jane: { start: 16, end: 34 }, // 8am-4pm PST
@@ -47,22 +47,34 @@ const SHIFT_WINDOWS = {
   // Marie: 9:30PM GMT-6AM GMT = 1:30PM PST-10PM PST (27-44)
   Marie: { start: 27, end: 44 }, // 1:30pm-10pm PST
 
-  // Danissa, Matt: 11PM GMT-8AM GMT = 3PM PST-12AM PST (30-48)
-  Danissa: { start: 26, end: 44 }, // 3pm-12am PST
-  Matt: { start: 26, end: 44 }, // 3pm-12am PST
+  // Danissa, Matt: 9PM GMT-6AM GMT = 1PM PST-10PM PST (26-44)
+  Danissa: { start: 26, end: 44 }, // 1pm-10pm PST
+  Matt: { start: 26, end: 44 }, // 1pm-10pm PST
 
-  // UPDATED: SP Team - More reasonable working hours
+  // Weekend Team - GMT times, converted to PDT (GMT - 7h). 0 = midnight PDT.
+  // Timeline window: 5am–8pm PDT (globalOffset=10, blockCount=30)
+  // Lam + Cover 1: 12pm–6pm GMT = 5am–11am PDT (blocks 10–22)
+  Lam: { start: 10, end: 22 },
+  'Cover 1': { start: 10, end: 22 },
+  // Sendrine + Cover 2: 5pm–1am GMT = 10am–6pm PDT (blocks 20–36); Cover 2 ends 2am GMT = 7pm PDT (38)
+  Sendrine: { start: 20, end: 36 },
+  'Cover 2': { start: 20, end: 38 },
+  // Isidora + Cover 3: 7pm–3am GMT = 12pm–8pm PDT (blocks 24–40)
+  Isidora: { start: 24, end: 40 },
+  'Cover 3': { start: 24, end: 40 },
+
+  // ✅ UPDATED: SP Team - More reasonable working hours
   // Beth: 8AM-4PM PST (16-32) - Standard business hours
   Beth: { start: 14, end: 32 }, // 8am-4pm PST
 
-  // James: 1AM-8:30AM PST (2-18) - Early morning coverage
-  James: { start: 4, end: 22 }, // 1am-8:30am PST
+  // James: 9AM-5:30PM GMT = 2AM-10:30AM PDT - London-based
+  James: { start: 4, end: 22 }, // 2am-10:30am PDT
 
-  // Sophia: 12AM-7:30AM PST (0-15) - Overnight coverage
-  Sophia: { start: 2, end: 20 }, // 12am-7:30am PST
-  
   // Lisa: 1AM-8:30AM PST (2-18) - Early morning coverage
   Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
+
+  // Sophia: 8AM-4:30PM GMT = 1AM-9:30AM PDT - London-based
+  Sophia: { start: 2, end: 20 }, // 1am-9:30am PDT
 
 };
 
@@ -103,13 +115,14 @@ function UserTimeline({
   applyOptimisticUpdate,
   isUserOff,
   setUserOffDay,
-  // CLEAN: Accept permission props from parent
+  // ✅ CLEAN: Accept permission props from parent
   canEdit = false,
   canDelete = false,
   canManageTeam = false,
+  isCoverSlot = false,
 }) {
   console.log(
-    'UserTimeline loaded for:',
+    '🚀 UserTimeline loaded for:',
     user,
     'canEdit:',
     canEdit,
@@ -124,20 +137,20 @@ function UserTimeline({
   const dragTicketIdRef = useRef(null);
   const dragTicketEstimateRef = useRef(1);
 
-  // CLEAN: Simple boolean check for visual feedback
+  // ✅ CLEAN: Simple boolean check for visual feedback
   const isReadOnlyUser = !canEdit; // If they can't edit, they're effectively read-only for UI
 
-  // ENHANCED: Check if this user is off using the hook function
+  // ✅ ENHANCED: Check if this user is off using the hook function
   const isOff = useMemo(() => {
     if (!isUserOff || !user || !selectedDate) {
       console.log(
-        `Cannot check off status - missing: isUserOff=${!!isUserOff}, user=${user}, selectedDate=${selectedDate}`
+        `🔍 Cannot check off status - missing: isUserOff=${!!isUserOff}, user=${user}, selectedDate=${selectedDate}`
       );
       return false;
     }
 
     const result = isUserOff(user, selectedDate);
-    console.log(`Checking isOff for ${user} on ${selectedDate}:`, result);
+    console.log(`🔍 Checking isOff for ${user} on ${selectedDate}:`, result);
     return result;
   }, [isUserOff, selectedDate, user]);
 
@@ -156,7 +169,7 @@ function UserTimeline({
     return hash;
   }
 
-  // FIXED: Check if a ticket is clipped (extends beyond shift window)
+  // ✅ FIXED: Check if a ticket is clipped (extends beyond shift window)
   const isTicketClipped = (block, index) => {
     // Disable clipping detection in View All mode
     if (isViewAll) {
@@ -174,7 +187,7 @@ function UserTimeline({
     const userShiftWindow = SHIFT_WINDOWS[user] || { start: 0, end: 48 };
     const globalShiftEnd = userShiftWindow.end; // This is already global, no offset needed
 
-    console.log(`CLIP CHECK for ${user}:`, {
+    console.log(`🔍 CLIP CHECK for ${user}:`, {
       ticket: ticket.ticket,
       ticketStart,
       ticketEnd,
@@ -188,7 +201,7 @@ function UserTimeline({
 
   const findTicketsForSpacing = (breakStart, breakEnd) => {
     console.log(
-      'Finding tickets that need spacing for break range:',
+      '🔍 Finding tickets that need spacing for break range:',
       breakStart,
       '-',
       breakEnd
@@ -213,7 +226,7 @@ function UserTimeline({
         `  Checking "${
           ticket.ticket
         }": ${ticketStart}-${ticketEnd} vs break ${breakStart}-${breakEnd} = ${
-          overlaps ? 'NEEDS SPACE' : 'safe'
+          overlaps ? '🕳️ NEEDS SPACE' : '✅ safe'
         }`
       );
 
@@ -236,7 +249,7 @@ function UserTimeline({
 
   // Simple break insertion (no conflicts)
   const insertBreakSimple = async (dragData, actualStartIndex) => {
-    console.log('Simple break insertion');
+    console.log('✅ Simple break insertion');
 
     const specialData = {
       ticket: dragData.type,
@@ -271,7 +284,7 @@ function UserTimeline({
           .eq('id', dragData.id);
 
         if (error) {
-          console.error('Database update error:', error);
+          console.error('❌ Database update error:', error);
           applyOptimisticUpdate(dragData.id, {
             start_index: dragData.start_index,
             assigned_user: dragData.assigned_user,
@@ -290,7 +303,7 @@ function UserTimeline({
           .select();
 
         if (error) {
-          console.error('Database insert error:', error);
+          console.error('❌ Database insert error:', error);
           setTickets((prev) => prev.filter((t) => t.id !== tempId));
         } else if (newSpecial && newSpecial[0]) {
           setTickets((prev) =>
@@ -299,21 +312,21 @@ function UserTimeline({
         }
       }
     } catch (error) {
-      console.error('Error in insertBreakSimple:', error);
+      console.error('❌ Error in insertBreakSimple:', error);
     }
   };
 
-  // CLEAN: Toggle off state - Check canManageTeam permission
+  // ✅ CLEAN: Toggle off state - Check canManageTeam permission
   const toggleOffState = async () => {
     if (!canManageTeam) {
-      console.log('User cannot manage team member status');
+      console.log('❌ User cannot manage team member status');
       alert(
         'You do not have permission to change team member status. Contact a manager or coordinator.'
       );
       return;
     }
 
-    console.log('TOGGLE OFF STATE DEBUG:', {
+    console.log('🔍 TOGGLE OFF STATE DEBUG:', {
       user,
       selectedDate,
       isOff,
@@ -323,7 +336,7 @@ function UserTimeline({
     });
 
     if (!setUserOffDay) {
-      console.error('setUserOffDay function not provided to UserTimeline');
+      console.error('❌ setUserOffDay function not provided to UserTimeline');
       alert(
         'Error: setUserOffDay function not available. Check parent component props.'
       );
@@ -331,17 +344,17 @@ function UserTimeline({
     }
 
     if (!user || !selectedDate) {
-      console.error('Missing required data:', { user, selectedDate });
+      console.error('❌ Missing required data:', { user, selectedDate });
       alert(`Error: Missing data - user: ${user}, date: ${selectedDate}`);
       return;
     }
 
     console.log(
-      `Toggling off state for ${user} on ${selectedDate}. Currently: ${isOff}`
+      `🔄 Toggling off state for ${user} on ${selectedDate}. Currently: ${isOff}`
     );
 
     try {
-      console.log('Calling setUserOffDay with:', {
+      console.log('📞 Calling setUserOffDay with:', {
         user,
         date: selectedDate,
         isOff: !isOff,
@@ -355,14 +368,14 @@ function UserTimeline({
         isOff ? '' : 'Off'
       );
 
-      console.log('setUserOffDay result:', result);
+      console.log('📦 setUserOffDay result:', result);
       console.log(
-        `Successfully toggled ${user} ${
+        `✅ Successfully toggled ${user} ${
           !isOff ? 'OFF' : 'ON'
         } for ${selectedDate}`
       );
     } catch (error) {
-      console.error(`Error in toggleOffState:`, {
+      console.error(`❌ Error in toggleOffState:`, {
         error,
         errorMessage: error?.message,
         errorStack: error?.stack,
@@ -379,10 +392,10 @@ function UserTimeline({
     }
   };
 
-  // CLEAN: Handle time adjustment - Check canEdit permission
+  // ✅ CLEAN: Handle time adjustment - Check canEdit permission
   const handleTimeAdjustment = async (ticket, direction) => {
     if (!canEdit) {
-      console.log('User cannot adjust ticket times');
+      console.log('❌ User cannot adjust ticket times');
       alert(
         'You do not have permission to adjust ticket times. Contact a manager or coordinator.'
       );
@@ -394,13 +407,13 @@ function UserTimeline({
     const newEstimate = Math.max(0.5, currentEstimate + adjustment);
 
     console.log(
-      `Adjusting time for "${ticket.ticket}": ${currentEstimate}h ${
+      `⏱️ Adjusting time for "${ticket.ticket}": ${currentEstimate}h ${
         direction === 'increase' ? '+' : '-'
       } 0.5h = ${newEstimate}h`
     );
 
     if (newEstimate === currentEstimate) {
-      console.log('No change needed, estimate already at minimum');
+      console.log('⏭️ No change needed, estimate already at minimum');
       return;
     }
 
@@ -428,14 +441,14 @@ function UserTimeline({
           .sort((a, b) => a.start_index - b.start_index);
 
         console.log(
-          `Size change: ${sizeChange} blocks, shifting ${ticketsToShift.length} tickets`
+          `📊 Size change: ${sizeChange} blocks, shifting ${ticketsToShift.length} tickets`
         );
 
         // Shift subsequent tickets
         for (const shiftTicket of ticketsToShift) {
           const newStartIndex = shiftTicket.start_index + sizeChange;
           console.log(
-            `  Shifting "${shiftTicket.ticket}" from ${shiftTicket.start_index} to ${newStartIndex}`
+            `  🔄 Shifting "${shiftTicket.ticket}" from ${shiftTicket.start_index} to ${newStartIndex}`
           );
 
           applyOptimisticUpdate(shiftTicket.id, {
@@ -456,7 +469,7 @@ function UserTimeline({
         .eq('id', ticket.id);
 
       if (error) {
-        console.error('Failed to update ticket estimate:', error);
+        console.error('❌ Failed to update ticket estimate:', error);
         // Rollback optimistic update
         applyOptimisticUpdate(ticket.id, {
           estimate: currentEstimate,
@@ -479,11 +492,11 @@ function UserTimeline({
         }
       } else {
         console.log(
-          `Successfully adjusted "${ticket.ticket}" to ${newEstimate}h`
+          `✅ Successfully adjusted "${ticket.ticket}" to ${newEstimate}h`
         );
       }
     } catch (error) {
-      console.error('Error adjusting ticket time:', error);
+      console.error('❌ Error adjusting ticket time:', error);
     } finally {
       setAdjustingTicket(null);
     }
@@ -493,7 +506,7 @@ function UserTimeline({
   const handleLobbyDrop = async (dragData) => {
     if (dragData.spacesToRemove || dragData.isElongatedTicket) {
       console.log(
-        'Returning elongated ticket to lobby - removing spacing breaks'
+        '🔄 Returning elongated ticket to lobby - removing spacing breaks'
       );
 
       // Find all breaks that are creating spaces in this ticket
@@ -516,13 +529,13 @@ function UserTimeline({
       });
 
       console.log(
-        `  Found ${spacingBreaks.length} spacing breaks to remove:`,
+        `  🔍 Found ${spacingBreaks.length} spacing breaks to remove:`,
         spacingBreaks.map((b) => `${b.ticket}@${b.start_index}`)
       );
 
       // Remove all spacing breaks
       for (const breakTicket of spacingBreaks) {
-        console.log(`  Removing spacing break: ${breakTicket.id}`);
+        console.log(`  🗑️ Removing spacing break: ${breakTicket.id}`);
         applyOptimisticUpdate(breakTicket.id, {
           assigned_user: null,
           start_index: null,
@@ -536,7 +549,7 @@ function UserTimeline({
     }
 
     // Return ticket to lobby
-    console.log(`Returning ticket "${dragData.ticket}" to lobby`);
+    console.log(`🏠 Returning ticket "${dragData.ticket}" to lobby`);
     applyOptimisticUpdate(dragData.id, {
       assigned_user: null,
       start_index: null,
@@ -558,12 +571,12 @@ function UserTimeline({
     const actualStartIndex = isViewAll ? dropIndex : dropIndex + globalOffset;
 
     console.log(
-      `Regular ticket drop: ${ticket.ticket} at position ${actualStartIndex}`
+      `🎫 Regular ticket drop: ${ticket.ticket} at position ${actualStartIndex}`
     );
 
     // If this is an elongated ticket being moved, remove the spacing breaks first
     if (ticket.spacesToRemove || ticket.isElongatedTicket) {
-      console.log('Removing spaces from moved elongated ticket');
+      console.log('🔄 Removing spaces from moved elongated ticket');
 
       // Find all breaks that were creating spaces in this ticket
       const spacingBreaks = tickets.filter((breakTicket) => {
@@ -585,11 +598,11 @@ function UserTimeline({
       });
 
       console.log(
-        `  Found ${spacingBreaks.length} spacing breaks to remove`
+        `  🔍 Found ${spacingBreaks.length} spacing breaks to remove`
       );
 
       for (const breakTicket of spacingBreaks) {
-        console.log(`  Removing spacing break: ${breakTicket.id}`);
+        console.log(`  🗑️ Removing spacing break: ${breakTicket.id}`);
         applyOptimisticUpdate(breakTicket.id, {
           assigned_user: null,
           start_index: null,
@@ -630,7 +643,7 @@ function UserTimeline({
     for (const t of shiftingTickets) {
       const length = (t.estimate || 1) * 2;
       console.log(
-        `  Shifting ticket "${t.ticket}" from ${t.start_index} to ${shiftStart}`
+        `  📤 Shifting ticket "${t.ticket}" from ${t.start_index} to ${shiftStart}`
       );
       applyOptimisticUpdate(t.id, { start_index: shiftStart });
       await supabase
@@ -651,7 +664,7 @@ function UserTimeline({
       .eq('id', ticket.id);
 
     if (error) {
-      console.error('Supabase assign error:', error.message);
+      console.error('❌ Supabase assign error:', error.message);
       // Rollback if database update fails
       applyOptimisticUpdate(ticket.id, {
         assigned_user: ticket.assigned_user,
@@ -666,7 +679,7 @@ function UserTimeline({
     } else {
       setPlacingTicketId(ticket.id);
       console.log(
-        `Successfully placed ticket "${ticket.ticket}" at position ${actualStartIndex}`
+        `✅ Successfully placed ticket "${ticket.ticket}" at position ${actualStartIndex}`
       );
     }
   };
@@ -678,18 +691,18 @@ function UserTimeline({
     const endIndex = actualStartIndex + durationBlocks;
 
     console.log(
-      `SPACE-BASED BREAK INSERTION: ${dragData.type} at position ${actualStartIndex}-${endIndex}`
+      `🕳️ SPACE-BASED BREAK INSERTION: ${dragData.type} at position ${actualStartIndex}-${endIndex}`
     );
 
     // Find tickets that would be affected by this break
     const affectedTickets = findTicketsForSpacing(actualStartIndex, endIndex);
 
     if (affectedTickets.length === 0) {
-      console.log('NO CONFLICTS - Simple break insertion');
+      console.log('✅ NO CONFLICTS - Simple break insertion');
       return await insertBreakSimple(dragData, actualStartIndex);
     }
 
-    console.log(`CREATING SPACES in ${affectedTickets.length} tickets`);
+    console.log(`🕳️ CREATING SPACES in ${affectedTickets.length} tickets`);
 
     // First, insert the break
     await insertBreakSimple(dragData, actualStartIndex);
@@ -702,20 +715,20 @@ function UserTimeline({
         endIndex
       );
       if (spacesToAdd > 0) {
-        console.log(`Adding ${spacesToAdd} spaces to "${ticket.ticket}"`);
+        console.log(`🔧 Adding ${spacesToAdd} spaces to "${ticket.ticket}"`);
 
         // Don't change the base estimate, just update visual tracking if needed
         // The timeline builder will automatically create the visual spaces
       }
     }
 
-    console.log('Space-based break insertion complete');
+    console.log('✅ Space-based break insertion complete');
   };
 
-  // ENHANCED: Split overflow with better error handling and duplicate prevention
+  // ✅ CLEAN: Handle split overflow - Check canEdit permission
   const handleSplitOverflow = async (timelineSlot) => {
     if (!canEdit) {
-      console.log('User cannot split overflow tickets');
+      console.log('❌ User cannot split overflow tickets');
       alert(
         'You do not have permission to split tickets. Contact a manager or coordinator.'
       );
@@ -733,7 +746,7 @@ function UserTimeline({
     const userShiftWindow = SHIFT_WINDOWS[user] || { start: 0, end: 48 };
     const globalShiftEnd = userShiftWindow.end; // This is already global, no offset needed
 
-    console.log(`SPLITTING OVERFLOW for "${ticket.ticket}":`, {
+    console.log(`✂️ SPLITTING OVERFLOW for "${ticket.ticket}":`, {
       user,
       ticketStart,
       ticketEnd,
@@ -743,17 +756,17 @@ function UserTimeline({
     });
 
     if (ticketEnd <= globalShiftEnd) {
-      console.log('No overflow to split');
+      console.log('❌ No overflow to split');
       return;
     }
 
-    // FIXED: Calculate the portions correctly
+    // ✅ FIXED: Calculate the portions correctly
     const workingPortion = Math.max(0, globalShiftEnd - ticketStart); // Blocks within shift
     const overflowPortion = ticketEnd - globalShiftEnd; // Blocks outside shift
     const workingHours = workingPortion / 2; // Convert blocks to hours
     const overflowHours = overflowPortion / 2; // Convert blocks to hours
 
-    console.log(`Split calculations:`, {
+    console.log(`📊 Split calculations:`, {
       workingPortion: `${workingPortion} blocks (${workingHours}h)`,
       overflowPortion: `${overflowPortion} blocks (${overflowHours}h)`,
       splitAt: globalShiftEnd,
@@ -762,113 +775,47 @@ function UserTimeline({
     });
 
     if (workingHours <= 0 || overflowHours <= 0) {
-      console.log('Invalid split portions');
+      console.log('❌ Invalid split portions');
       return;
     }
 
     try {
-      // Check if a turnover already exists for this ticket
-      const baseName = ticket.ticket.replace(/\s*\(Turnover\)\s*$/, '').trim();
-      const existingTurnover = tickets.find(t => 
-        t.ticket === `${baseName} (Turnover)` && 
-        !t.assigned_user && 
-        t.date === null
-      );
-
-      if (existingTurnover) {
-        console.log('Turnover already exists for this ticket - updating instead of creating');
-        
-        // Update existing turnover with combined overflow time
-        const newTurnoverEstimate = (existingTurnover.estimate || 0) + overflowHours;
-        
-        applyOptimisticUpdate(existingTurnover.id, {
-          estimate: newTurnoverEstimate,
-          original_estimate: newTurnoverEstimate
-        });
-
-        await supabase
-          .from('tickets')
-          .update({
-            estimate: newTurnoverEstimate,
-            original_estimate: newTurnoverEstimate
-          })
-          .eq('id', existingTurnover.id);
-
-        console.log(`Updated existing turnover to ${newTurnoverEstimate}h`);
-      } else {
-        // Remove any spacing breaks within this ticket first
-        const spacingBreaks = tickets.filter((breakTicket) => {
-          if (
-            breakTicket.type !== 'break' ||
-            breakTicket.assigned_user !== user ||
-            breakTicket.date !== selectedDate
-          ) {
-            return false;
-          }
-
-          const breakStart = breakTicket.start_index;
-          const breakEnd = breakStart + breakTicket.estimate * 2;
-
-          // Check if break overlaps with the original ticket timespan
-          return breakStart < ticketEnd && breakEnd > ticketStart;
-        });
-
-        if (spacingBreaks.length > 0) {
-          console.log(
-            `Removing ${spacingBreaks.length} spacing breaks before split`
-          );
-          for (const breakTicket of spacingBreaks) {
-            applyOptimisticUpdate(breakTicket.id, {
-              assigned_user: null,
-              start_index: null,
-            });
-
-            await supabase
-              .from('tickets')
-              .update({ assigned_user: null, start_index: null })
-              .eq('id', breakTicket.id);
-          }
+      // Remove any spacing breaks within this ticket first
+      const spacingBreaks = tickets.filter((breakTicket) => {
+        if (
+          breakTicket.type !== 'break' ||
+          breakTicket.assigned_user !== user ||
+          breakTicket.date !== selectedDate
+        ) {
+          return false;
         }
 
-        // FIXED: Create turnover ticket in lobby with correct estimate
-        const turnoverTicketData = {
-          ticket: `${baseName} (Turnover)`,
-          estimate: overflowHours, // This should be in hours
-          original_estimate: overflowHours, // This should be in hours
-          link: ticket.link || '',
-          type: ticket.type || 'normal',
-          category: ticket.category,
-          assigned_user: null, // Goes to lobby
-          start_index: null, // Goes to lobby
-          date: null, // Persistent lobby
-          color_key: ticket.color_key || ticket.ticket,
-          is_turnover: true,
-        };
+        const breakStart = breakTicket.start_index;
+        const breakEnd = breakStart + breakTicket.estimate * 2;
 
-        console.log(`Creating turnover ticket:`, turnoverTicketData);
+        // Check if break overlaps with the original ticket timespan
+        return breakStart < ticketEnd && breakEnd > ticketStart;
+      });
 
-        // Insert into database - let real-time listener handle UI updates
-        const { data: newTurnover, error: insertError } = await supabase
-          .from('tickets')
-          .insert([turnoverTicketData])
-          .select();
+      if (spacingBreaks.length > 0) {
+        console.log(
+          `🔧 Removing ${spacingBreaks.length} spacing breaks before split`
+        );
+        for (const breakTicket of spacingBreaks) {
+          applyOptimisticUpdate(breakTicket.id, {
+            assigned_user: null,
+            start_index: null,
+          });
 
-        if (insertError) {
-          console.error('Failed to create turnover ticket:', insertError);
-          throw insertError;
-        }
-
-        if (newTurnover && newTurnover[0]) {
-          console.log(`Database returned turnover:`, newTurnover[0]);
-          console.log(
-            `Successfully created turnover: "${newTurnover[0].ticket}" (${overflowHours}h) in lobby`
-          );
-          // Don't add to local state - let the real-time listener handle it
+          await supabase
+            .from('tickets')
+            .update({ assigned_user: null, start_index: null })
+            .eq('id', breakTicket.id);
         }
       }
 
       // Update the original ticket to only cover the working portion
-      console.log(`Updating original ticket to ${workingHours}h`);
+      console.log(`✂️ Updating original ticket to ${workingHours}h`);
       applyOptimisticUpdate(ticket.id, {
         estimate: workingHours,
         original_estimate: ticket.original_estimate || ticket.estimate, // Preserve original estimate
@@ -882,22 +829,72 @@ function UserTimeline({
         })
         .eq('id', ticket.id);
 
-    } catch (error) {
-      console.error('Error in handleSplitOverflow:', error);
-      
-      // More specific error messages
-      if (error.code === '23505') {
-        console.log('Turnover ticket already exists, this is likely a timing issue');
-        // Don't show error to user, this is often not a real problem
-      } else {
-        alert(`Failed to split ticket: ${error.message}`);
+      // ✅ FIXED: Create turnover ticket in lobby with correct estimate
+      const turnoverTicketData = {
+        ticket: `${ticket.ticket} (Turnover)`,
+        estimate: overflowHours, // This should be in hours
+        original_estimate: overflowHours, // This should be in hours
+        link: ticket.link || '',
+        type: ticket.type || 'normal',
+        category: ticket.category,
+        assigned_user: null, // Goes to lobby
+        start_index: null, // Goes to lobby
+        date: null, // Persistent lobby
+        color_key: ticket.color_key || ticket.ticket,
+        is_turnover: true,
+      };
+
+      console.log(`📦 Creating turnover ticket:`, turnoverTicketData);
+      console.log(
+        `📊 Turnover estimate check: ${overflowHours}h (should match estimate in turnoverTicketData)`
+      );
+
+      // Add turnover to local state immediately
+      const tempTurnoverId = `temp_turnover_${Date.now()}_${Math.random()}`;
+      const tempTurnover = { ...turnoverTicketData, id: tempTurnoverId };
+
+      console.log(`🏷️ Adding temp turnover to state:`, tempTurnover);
+      setTickets((prev) => [...prev, tempTurnover]);
+
+      // Insert into database
+      const { data: newTurnover, error: insertError } = await supabase
+        .from('tickets')
+        .insert([turnoverTicketData])
+        .select();
+
+      if (insertError) {
+        console.error('❌ Failed to create turnover ticket:', insertError);
+        // Remove temporary ticket on error
+        setTickets((prev) => prev.filter((t) => t.id !== tempTurnoverId));
+
+        // Rollback original ticket change
+        applyOptimisticUpdate(ticket.id, {
+          estimate: ticket.estimate,
+          original_estimate: ticket.original_estimate,
+        });
+      } else if (newTurnover && newTurnover[0]) {
+        console.log(`🗄️ Database returned turnover:`, newTurnover[0]);
+        console.log(
+          `🔍 Database estimate check: ${newTurnover[0].estimate} (should be ${overflowHours}h)`
+        );
+
+        // Replace temporary ticket with real one
+        setTickets((prev) =>
+          prev.map((t) => (t.id === tempTurnoverId ? newTurnover[0] : t))
+        );
+
+        console.log(
+          `✅ Successfully created turnover: "${newTurnover[0].ticket}" (${overflowHours}h) in lobby`
+        );
       }
+    } catch (error) {
+      console.error('❌ Error in handleSplitOverflow:', error);
     }
   };
 
   // Enhanced timeline builder that handles spaces within tickets
   const timeline = useMemo(() => {
-    console.log(`TIMELINE REBUILD for ${user}:`, {
+    console.log(`🏗️ TIMELINE REBUILD for ${user}:`, {
       blocksCount: blocks.length,
       ticketsCount: tickets.length,
       selectedDate,
@@ -925,7 +922,7 @@ function UserTimeline({
     );
 
     console.log(
-      `${user} has ${userTickets.length} tickets and ${userBreaks.length} breaks`
+      `👤 ${user} has ${userTickets.length} tickets and ${userBreaks.length} breaks`
     );
 
     // Process each ticket and calculate its elongated timeline with spaces
@@ -936,7 +933,7 @@ function UserTimeline({
         ? globalStartIndex
         : globalStartIndex - globalOffset;
 
-      console.log(`Processing ticket "${ticket.ticket}":`, {
+      console.log(`🎫 Processing ticket "${ticket.ticket}":`, {
         baseEstimate: baseEstimate / 2,
         globalStartIndex,
         localStartIndex,
@@ -953,7 +950,7 @@ function UserTimeline({
 
         if (overlaps) {
           console.log(
-            `  Break "${breakTicket.ticket}" intersects at global ${breakStart}-${breakEnd}`
+            `  🔗 Break "${breakTicket.ticket}" intersects at global ${breakStart}-${breakEnd}`
           );
         }
 
@@ -969,7 +966,7 @@ function UserTimeline({
       const elongatedDuration = baseEstimate + totalSpacesDuration;
 
       console.log(
-        `  Ticket elongation: ${baseEstimate / 2}h base + ${
+        `  📏 Ticket elongation: ${baseEstimate / 2}h base + ${
           totalSpacesDuration / 2
         }h spaces = ${elongatedDuration / 2}h total`
       );
@@ -994,7 +991,7 @@ function UserTimeline({
           if (breakAtThisPosition) {
             // This is a space within the ticket
             console.log(
-              `    Space at timeline[${timelineIndex}] for break "${breakAtThisPosition.ticket}"`
+              `    🕳️ Space at timeline[${timelineIndex}] for break "${breakAtThisPosition.ticket}"`
             );
             timelineArray[timelineIndex] = {
               ticket: ticket,
@@ -1009,7 +1006,7 @@ function UserTimeline({
             // This is actual ticket content
             if (ticketBlockIndex < baseEstimate) {
               console.log(
-                `    Ticket content at timeline[${timelineIndex}], ticketBlock ${ticketBlockIndex}`
+                `    📦 Ticket content at timeline[${timelineIndex}], ticketBlock ${ticketBlockIndex}`
               );
               timelineArray[timelineIndex] = {
                 ticket: ticket,
@@ -1050,7 +1047,7 @@ function UserTimeline({
       if (!isCreatingSpaces) {
         // Place as standalone break
         console.log(
-          `Placing standalone break "${breakTicket.ticket}" at ${breakLocalIndex}`
+          `🔄 Placing standalone break "${breakTicket.ticket}" at ${breakLocalIndex}`
         );
         for (let i = 0; i < breakDuration; i++) {
           const timelineIndex = breakLocalIndex + i;
@@ -1084,7 +1081,7 @@ function UserTimeline({
         .length,
     };
 
-    console.log(`Timeline built for ${user}:`, stats);
+    console.log(`📊 Timeline built for ${user}:`, stats);
 
     return timelineArray;
   }, [blocks, user, selectedDate, isViewAll, globalOffset, tickets, isOff]);
@@ -1095,13 +1092,13 @@ function UserTimeline({
 
     const ticket = timelineSlot.ticket;
     console.log(
-      `DRAG START: "${ticket.ticket}" (type: ${ticket.type || 'normal'})`
+      `🚀 DRAG START: "${ticket.ticket}" (type: ${ticket.type || 'normal'})`
     );
 
     if (timelineSlot.isSpace || timelineSlot.elongatedTicket) {
       // Dragging an elongated ticket (with or without spaces)
       console.log(
-        `Dragging elongated ticket - will remove spaces and return to original duration`
+        `🕳️ Dragging elongated ticket - will remove spaces and return to original duration`
       );
 
       const originalEstimate = ticket.estimate || ticket.original_estimate;
@@ -1120,7 +1117,7 @@ function UserTimeline({
       dragTicketEstimateRef.current = originalEstimate * 2;
     } else if (timelineSlot.isBreak || timelineSlot.standaloneBreak) {
       // Dragging a break
-      console.log(`Dragging break: "${ticket.ticket}"`);
+      console.log(`🔄 Dragging break: "${ticket.ticket}"`);
 
       e.dataTransfer.setData(
         'application/json',
@@ -1135,7 +1132,7 @@ function UserTimeline({
       dragTicketEstimateRef.current = (ticket.estimate || 0.5) * 2;
     } else {
       // Normal ticket drag (no elongation)
-      console.log(`Normal ticket drag: "${ticket.ticket}"`);
+      console.log(`📋 Normal ticket drag: "${ticket.ticket}"`);
 
       e.dataTransfer.setData(
         'application/json',
@@ -1166,12 +1163,12 @@ function UserTimeline({
 
   const clearHoverRange = () => setHoverRange([]);
 
-  // CLEAN: Enhanced drop handling with permission checks
+  // ✅ CLEAN: Enhanced drop handling with permission checks
   const handleDrop = async (e) => {
     e.preventDefault();
 
     if (!canEdit) {
-      console.log('User cannot drag and drop tickets');
+      console.log('❌ User cannot drag and drop tickets');
       alert(
         'You do not have permission to move tickets. Contact a manager or coordinator.'
       );
@@ -1179,14 +1176,14 @@ function UserTimeline({
       return;
     }
 
-    console.log('DROP EVENT TRIGGERED');
+    console.log('🎯 DROP EVENT TRIGGERED');
 
     let dragData;
     try {
       dragData = JSON.parse(e.dataTransfer.getData('application/json'));
-      console.log('PARSED DRAG DATA:', dragData);
+      console.log('📦 PARSED DRAG DATA:', dragData);
     } catch (error) {
-      console.error('Failed to parse drag data:', error);
+      console.error('❌ Failed to parse drag data:', error);
       return;
     }
 
@@ -1194,7 +1191,7 @@ function UserTimeline({
     const dropIndex = parseInt(dropCell?.getAttribute('data-index'), 10);
 
     if (!dragData) {
-      console.log('No drag data found - aborting drop');
+      console.log('❌ No drag data found - aborting drop');
       return;
     }
 
@@ -1207,14 +1204,14 @@ function UserTimeline({
       e.target.closest('.ticket-lobby');
 
     if (isLobbyDrop) {
-      console.log('LOBBY DROP: Processing...');
+      console.log('🏠 LOBBY DROP: Processing...');
       await handleLobbyDrop(dragData);
       clearHoverRange();
       return;
     }
 
     if (isNaN(dropIndex)) {
-      console.log('Invalid dropIndex - aborting drop');
+      console.log('❌ Invalid dropIndex - aborting drop');
       clearHoverRange();
       return;
     }
@@ -1222,10 +1219,10 @@ function UserTimeline({
     const isSpecialTicket = dragData.isSpecial || isSpecialTicketType(dragData);
 
     if (isSpecialTicket) {
-      console.log('ROUTING TO SPACE-BASED BREAK INSERTION');
+      console.log('🎯 ROUTING TO SPACE-BASED BREAK INSERTION');
       await handleSpaceBasedBreakInsertion(dragData, dropIndex);
     } else {
-      console.log('ROUTING TO REGULAR TICKET DROP');
+      console.log('🎯 ROUTING TO REGULAR TICKET DROP');
       await handleTicketDrop(dragData, dropIndex);
     }
 
@@ -1273,26 +1270,29 @@ function UserTimeline({
     <div className="timeline">
       <div className="timeline-label">
         <span
-          className={`user-name ${isOff ? 'user-off' : 'user-on'} ${
+          className={`user-name ${isCoverSlot ? 'user-cover' : isOff ? 'user-off' : 'user-on'} ${
             isReadOnlyUser ? 'user-name-readonly' : ''
           }`}
           onClick={(e) => {
             e.preventDefault();
             e.stopPropagation();
 
-            // CLEAN: Check permission, not role
+            // Cover slots have no identity — skip off-day toggle
+            if (isCoverSlot) return;
+
+            // ✅ CLEAN: Check permission, not role
             if (!canManageTeam) {
               console.log(
-                `User clicked on ${user} name but cannot toggle status`
+                `❌ User clicked on ${user} name but cannot toggle status`
               );
               return;
             }
 
-            console.log(`Clicked on ${user} name. Current isOff: ${isOff}`);
+            console.log(`🖱️ Clicked on ${user} name. Current isOff: ${isOff}`);
             toggleOffState();
           }}
           style={{
-            cursor: canManageTeam ? 'pointer' : 'default',
+            cursor: isCoverSlot ? 'default' : canManageTeam ? 'pointer' : 'default',
             opacity: isReadOnlyUser ? 0.9 : 1,
           }}
           title={
@@ -1376,7 +1376,7 @@ function UserTimeline({
             isTicketContent && (block.ticket.estimate || 1) > 0.5;
           const canIncrease = isTicketContent && !isClipped;
 
-          // CLEAN: Time controls - Check canEdit permission
+          // ✅ CLEAN: Time controls - Check canEdit permission
           const showTimeControls =
             isTicketContent && isFirstBlock && !isViewAll && canEdit;
 
@@ -1479,7 +1479,7 @@ function UserTimeline({
                     </span>
                   ) : null}
 
-                  {/* CLEAN: Time controls with permission check */}
+                  {/* ✅ CLEAN: Time controls with permission check */}
                   {showTimeControls && hasContent && !isOffShift && (
                     <div
                       className="time-adjustment-controls"
@@ -1501,7 +1501,7 @@ function UserTimeline({
                           className="time-adjust-btn decrease"
                           onClick={(e) => {
                             console.log(
-                              `DEBUG: Decrease clicked for ${block.ticket.ticket}`
+                              `🐛 DEBUG: Decrease clicked for ${block.ticket.ticket}`
                             );
                             e.stopPropagation();
                             e.preventDefault();
@@ -1532,7 +1532,7 @@ function UserTimeline({
                           className="time-adjust-btn increase"
                           onClick={(e) => {
                             console.log(
-                              `DEBUG: Increase clicked for ${block.ticket.ticket}`
+                              `🐛 DEBUG: Increase clicked for ${block.ticket.ticket}`
                             );
                             e.stopPropagation();
                             e.preventDefault();
@@ -1561,7 +1561,7 @@ function UserTimeline({
                     </div>
                   )}
 
-                  {/* CLEAN: Split overflow icon with permission check */}
+                  {/* ✅ CLEAN: Split overflow icon with permission check */}
                   {isClipped &&
                     !isSpace &&
                     !isBreak &&
@@ -1590,7 +1590,4 @@ function UserTimeline({
 }
 
 export default UserTimeline;
-
-
-
 
