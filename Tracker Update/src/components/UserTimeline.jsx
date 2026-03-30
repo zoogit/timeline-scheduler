@@ -8,17 +8,17 @@ import supabase from '../supabaseClient';
 const SHIFT_WINDOWS = {
   // London Team - Convert GMT times to PDT (GMT - 7 hours)
   // Andrew, Mitchell, Nicole, Solveiga: 8AM-4:30PM GMT = 1AM-9:30AM PDT (2-19)
-  Andrew: { start: 2, end: 18 }, // 12am-7:30am PST
-  Mitchell: { start: 2, end: 18 }, // 12am-7:30am PST
-  Nicole: { start: 2, end: 18 }, // 12am-7:30am PST
-  Solveiga: { start: 2, end: 18 }, // 12am-7:30am PST
+  Andrew: { start: 0, end: 16 }, // 12am-7:30am PST
+  Mitchell: { start: 0, end: 16 }, // 12am-7:30am PST
+  Nicole: { start: 0, end: 16 }, // 12am-7:30am PST
+  Solveiga: { start: 0, end: 16 }, // 12am-7:30am PST
 
   // Andrei, Bella, Emma, Goldee, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
-  Andrei: { start: 4, end: 20 }, // 1am-8:30am PST
-  Bella: { start: 4, end: 20 }, // 1am-8:30am PST
-  Emma: { start: 4, end: 20 }, // 1am-8:30am PST
-  Goldee: { start: 4, end: 20 }, // 1am-8:30am PST
-  Simona: { start: 4, end: 20 }, // 1am-8:30am PST
+  Andrei: { start: 2, end: 18 }, // 1am-8:30am PST
+  Bella: { start: 2, end: 18 }, // 1am-8:30am PST
+  Emma: { start: 2, end: 18 }, // 1am-8:30am PST
+  Goldee: { start: 2, end: 18 }, // 1am-8:30am PST
+  Simona: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
   // Claire, Gabrielle, Jane, Paulina, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
@@ -68,13 +68,13 @@ const SHIFT_WINDOWS = {
   Beth: { start: 14, end: 32 }, // 8am-4pm PST
 
   // James: 9AM-5:30PM GMT = 2AM-10:30AM PDT - London-based
-  James: { start: 4, end: 22 }, // 2am-10:30am PDT
+  James: { start: 2, end: 20 }, // 2am-10:30am PDT
 
   // Lisa: 1AM-8:30AM PST (2-18) - Early morning coverage
   Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Sophia: 8AM-4:30PM GMT = 1AM-9:30AM PDT - London-based
-  Sophia: { start: 2, end: 20 }, // 1am-9:30am PDT
+  Sophia: { start: 0, end: 18 }, // 1am-9:30am PDT
 
 };
 
