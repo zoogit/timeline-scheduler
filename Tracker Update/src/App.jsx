@@ -53,7 +53,7 @@ const SHIFT_CONFIG = {
   Night: { startHour: 11, blockCount: 26 },
   SP: { startHour: 0, blockCount: 32 },
   // Weekend: 5am–8pm PDT = 12pm–3am GMT, covers all three weekend shifts
-  Weekend: { startHour: 5, blockCount: 30 },
+  Weekend: { startHour: 4, blockCount: 30 },
 };
 
 const VIEW_ALL_TEAM_CONFIG = {
