@@ -87,8 +87,8 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
     const cbtTicketData = {
       ticket,
       link,
-      estimate: 6,
-      original_estimate: 6,
+      estimate: 7,
+      original_estimate: 7,
       assigned_user: null,
       start_index: null,
       type: 'normal',
@@ -209,10 +209,10 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
       <button
         className="category-btn cbt"
         onClick={handleAddCBT}
-        title="Create 6-hour Design ticket"
+        title="Create 7-hour Design ticket"
       >
-        CBT
-      </button>
+        CBT (7hr)
+</button>
 
       {/* ✅ Three separate category buttons */}
       <div className="category-buttons">
