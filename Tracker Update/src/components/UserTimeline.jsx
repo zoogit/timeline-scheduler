@@ -13,11 +13,12 @@ const SHIFT_WINDOWS = {
   Nicole: { start: 0, end: 16 }, // 12am-7:30am PST
   Solveiga: { start: 0, end: 16 }, // 12am-7:30am PST
 
-  // Andrei, Bella, Emma, Goldee, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
+  // Andrei, Bella, Emma, Goldee, Jo, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
   Andrei: { start: 2, end: 18 }, // 1am-8:30am PST
   Bella: { start: 2, end: 18 }, // 1am-8:30am PST
   Emma: { start: 2, end: 18 }, // 1am-8:30am PST
   Goldee: { start: 2, end: 18 }, // 1am-8:30am PST
+  Jo: { start: 2, end: 18 }, // 1am-8:30am PST
   Simona: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
