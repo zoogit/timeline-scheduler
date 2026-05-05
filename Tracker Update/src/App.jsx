@@ -28,6 +28,7 @@ const TEAMS = {
     'Goldee',
     'Mitchell',
     'Nicole',
+    'Jo',
     'Simona',
     'Solveiga',
   ],
