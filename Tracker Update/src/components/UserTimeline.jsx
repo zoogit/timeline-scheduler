@@ -12,6 +12,8 @@ const SHIFT_WINDOWS = {
   Mitchell: { start: 0, end: 16 }, // 12am-7:30am PST
   Nicole: { start: 0, end: 16 }, // 12am-7:30am PST
   Solveiga: { start: 0, end: 16 }, // 12am-7:30am PST
+  Karen: { start: 12, end: 28 }, // 6am-2pm PST                                                    
+  Kristina: { start: 12, end: 28 }, // 6am-2pm PST
 
   // Andrei, Bella, Emma, Goldee, Jo, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
   Andrei: { start: 2, end: 18 }, // 1am-8:30am PST
