@@ -16,6 +16,7 @@ import TicketLobby from './components/TicketLobby';
 import TimelineHeader from './components/TimelineHeader';
 import UserTimeline from './components/UserTimeline';
 import ExportButton from './components/ExportButton';
+import ResourceLinkBanner from './components/ResourceLinkBanner';
 import supabase from './supabaseClient';
 import './styles.css';
 
