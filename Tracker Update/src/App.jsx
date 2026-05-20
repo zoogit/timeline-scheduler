@@ -1173,7 +1173,8 @@ function AppContent() {
               </div>
             </div>
           </div>
-
+          <ResourceLinkBanner userRole={userRole} />
+          
           {/* Timeline Container */}
           <div className="timeline-scroll-container">
             {viewAll ? (
