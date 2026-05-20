@@ -27,6 +27,8 @@ const TEAMS = {
     'Emma',
     'Goldee',
     'Mitchell',
+    'Kristina',
+    'Mitchell',
     'Nicole',
     'Jo',
     'Simona',
