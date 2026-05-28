@@ -27,13 +27,16 @@ const TEAMS = {
     'Bella',
     'Emma',
     'Goldee',
+    'James',
     'Karen',
     'Kristina',
+    'Lisa',
     'Mitchell',
     'Nicole',
     'Jo',
     'Simona',
     'Solveiga',
+    'Sophia',
   ],
   Day: [
     'Claire',
@@ -47,7 +50,6 @@ const TEAMS = {
     'Victoria',
   ],
   Night: ['Ashley', 'Doue', 'Danissa', 'Matt', 'Marie', 'Shaida'],
-  SP: ['Beth', 'James', 'Sophia', 'Lisa'],
   Weekend: ['Lam', 'Cover 1', 'Sendrine', 'Cover 2', 'Isidora', 'Cover 3'],
 };
 
@@ -55,7 +57,6 @@ const SHIFT_CONFIG = {
   London: { startHour: 0, blockCount: 28 },
   Day: { startHour: 6, blockCount: 22 },
   Night: { startHour: 11, blockCount: 26 },
-  SP: { startHour: 0, blockCount: 32 },
   // Weekend: 5am–8pm PDT = 12pm–3am GMT, covers all three weekend shifts
   Weekend: { startHour: 4, blockCount: 30 },
 };
@@ -64,7 +65,6 @@ const VIEW_ALL_TEAM_CONFIG = {
   London: { startHour: 0, startIndexOffset: 0 },
   Day: { startHour: 6, startIndexOffset: 12 },
   Night: { startHour: 11, startIndexOffset: 26 },
-  SP: { startHour: 0, startIndexOffset: 0 },
 };
 
 // Helper functions - memoized to prevent recalculation
@@ -668,11 +668,10 @@ function AppContent() {
     }
   };
 
-  // ✅ UPDATED: Timeline data processing to include SP team
   const timelineData = useMemo(() => {
     const data = {};
     const currentUsers = viewAll
-      ? [...TEAMS.London, ...TEAMS.Day, ...TEAMS.Night, ...TEAMS.SP] // ✅ ADD SP team here
+      ? [...TEAMS.London, ...TEAMS.Day, ...TEAMS.Night]
       : USERS;
 
     // Initialize timeline arrays for each user
@@ -1091,16 +1090,6 @@ function AppContent() {
           <div className="team-sub-name">US Night</div>
         </button>
         <button
-          className={`${selectedTeam === 'SP' && !viewAll ? 'active' : ''}`}
-          onClick={() => {
-            setSelectedTeam('SP');
-            setViewAll(false);
-          }}
-        >
-          <div className="team-main-name">Special</div>
-          <div className="team-sub-name">Projects</div>
-        </button>
-        <button
           className={`${selectedTeam === 'Weekend' && !viewAll ? 'active' : ''}`}
           onClick={() => {
             setSelectedTeam('Weekend');
@@ -1152,6 +1141,8 @@ function AppContent() {
           />
         )}
 
+        <ResourceLinkBanner userRole={userRole} />
+
         {/* Timeline Container */}
         <div className="timeline-container-wrapper">
           {/* ✅ UPDATED: Timezone Selection with EST */}
@@ -1173,13 +1164,11 @@ function AppContent() {
               </div>
             </div>
           </div>
-          <ResourceLinkBanner userRole={userRole} />
-          
+
           {/* Timeline Container */}
           <div className="timeline-scroll-container">
             {viewAll ? (
-              // ✅ UPDATED: View All Mode - Include SP Team
-              ['London', 'Day', 'Night', 'SP'].map((teamKey) => {
+              ['London', 'Day', 'Night'].map((teamKey) => {
                 const USERS = TEAMS[teamKey];
                 const teamConfig = VIEW_ALL_TEAM_CONFIG[teamKey];
                 const teamStart = teamConfig.startIndexOffset;
@@ -1196,8 +1185,6 @@ function AppContent() {
                             return 'Shift I - US Day';
                           case 'Night':
                             return 'Shift II - US Night';
-                          case 'SP':
-                            return 'Special Projects';
                           default:
                             return `${teamKey} Team`;
                         }

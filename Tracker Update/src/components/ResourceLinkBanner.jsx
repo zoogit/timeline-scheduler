@@ -12,6 +12,7 @@ function ResourceLinkBanner({ userRole }) {
   const [form, setForm] = useState(DEFAULT_FORM);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
 
   const isManager = userRole === 'manager';
   const userRoleLevel = ROLE_HIERARCHY[userRole] ?? 0;
@@ -63,9 +64,16 @@ function ResourceLinkBanner({ userRole }) {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('Remove this link?')) return;
-    await supabase.from('resource_links').update({ is_active: false }).eq('id', id);
-    fetchLinks();
+    const { error: dbError } = await supabase
+      .from('resource_links')
+      .update({ is_active: false })
+      .eq('id', id);
+    if (dbError) {
+      setError(dbError.message);
+    } else {
+      setConfirmDeleteId(null);
+      fetchLinks();
+    }
   };
 
   const startEdit = (link) => {
@@ -171,19 +179,37 @@ function ResourceLinkBanner({ userRole }) {
                       {link.min_role === 'team_member' ? 'Everyone' : link.min_role.replace('_', ' ') + '+'}
                     </td>
                     <td style={{ padding: '6px 8px' }}>
-                      <div style={{ display: 'flex', gap: '6px' }}>
+                      <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                         <button
                           onClick={() => startEdit(link)}
                           style={{ fontSize: '12px', padding: '2px 8px', background: '#fff', border: '1px solid #dee2e6', borderRadius: '3px', cursor: 'pointer' }}
                         >
                           Edit
                         </button>
-                        <button
-                          onClick={() => handleDelete(link.id)}
-                          style={{ fontSize: '12px', padding: '2px 8px', background: '#fff', border: '1px solid #ffcccc', color: '#e74c3c', borderRadius: '3px', cursor: 'pointer' }}
-                        >
-                          Remove
-                        </button>
+                        {confirmDeleteId === link.id ? (
+                          <>
+                            <span style={{ fontSize: '12px', color: '#e74c3c' }}>Sure?</span>
+                            <button
+                              onClick={() => handleDelete(link.id)}
+                              style={{ fontSize: '12px', padding: '2px 8px', background: '#e74c3c', color: '#fff', border: 'none', borderRadius: '3px', cursor: 'pointer' }}
+                            >
+                              Yes
+                            </button>
+                            <button
+                              onClick={() => setConfirmDeleteId(null)}
+                              style={{ fontSize: '12px', padding: '2px 8px', background: '#fff', border: '1px solid #dee2e6', borderRadius: '3px', cursor: 'pointer' }}
+                            >
+                              No
+                            </button>
+                          </>
+                        ) : (
+                          <button
+                            onClick={() => setConfirmDeleteId(link.id)}
+                            style={{ fontSize: '12px', padding: '2px 8px', background: '#fff', border: '1px solid #ffcccc', color: '#e74c3c', borderRadius: '3px', cursor: 'pointer' }}
+                          >
+                            Remove
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
