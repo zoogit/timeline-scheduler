@@ -45,7 +45,6 @@ const ProfileEditor = ({ profileId = null, onClose = null, onSave = null }) => {
     { value: 'London', label: 'London Team (Shift III)' },
     { value: 'Day', label: 'Day Team (Shift I)' },
     { value: 'Night', label: 'Night Team (Shift II)' },
-    { value: 'SP', label: 'SP Team (Special Projects)' },
   ];
 
   // Determine if this is editing own profile or another user's profile

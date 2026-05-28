@@ -494,7 +494,6 @@ const LoginForm = () => {
                       <option value="London">London</option>
                       <option value="Day">Day</option>
                       <option value="Night">Night</option>
-                      <option value="SP">SP</option>
                     </select>
                   </div>
 

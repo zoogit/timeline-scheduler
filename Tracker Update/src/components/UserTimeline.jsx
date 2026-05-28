@@ -68,10 +68,6 @@ const SHIFT_WINDOWS = {
   Isidora: { start: 22, end: 40 },
   'Cover 3': { start: 21, end: 40 },
 
-  // ✅ UPDATED: SP Team - More reasonable working hours
-  // Beth: 8AM-4PM PST (16-32) - Standard business hours
-  Beth: { start: 14, end: 32 }, // 8am-4pm PST
-
   // James: 9AM-5:30PM GMT = 2AM-10:30AM PDT - London-based
   James: { start: 2, end: 20 }, // 2am-10:30am PDT
 
