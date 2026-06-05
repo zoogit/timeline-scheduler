@@ -78,7 +78,7 @@
 
 .timeline-controls-header {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
   align-items: center;
   margin-bottom: 15px;
   padding: 10px 20px;
@@ -1209,7 +1209,7 @@ body {
 .timeline-cell a.cell-label,
 .timeline-cell span.cell-label {
   text-decoration: none;
-  color: white;
+  color: inherit;
   font-weight: bold;
   font-size: 10px;
   display: inline-block;
@@ -1812,10 +1812,36 @@ body {
   letter-spacing: 0.05em;                                             
   }                                                                     
   
-.category-btn.cbt:hover {                                             
+.category-btn.cbt:hover {
  background-color: #ee9f27;
   color: white;
- }                                                                     
+ }
+
+.category-legend {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-swatch {
+  width: 60px;
+  height: 14px;
+  border-radius: 4px;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+.legend-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #495057;
+}
  
 
 

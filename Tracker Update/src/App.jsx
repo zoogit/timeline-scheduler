@@ -400,12 +400,22 @@ function AppContent() {
   // Use database-backed off days
   const {
     offUsers,
-    isUserOff,
-    setUserOffDay,
+    isUserOff: isUserOffDB,
+    setUserOffDay: setUserOffDayDB,
     loading: offDaysLoading,
     error: offDaysError,
     refreshOffDays,
   } = useOffDays(selectedDate);
+
+  const PERMANENTLY_OFF_USERS = new Set(['Lisa']);
+  const isUserOff = useCallback((userName, date) => {
+    if (PERMANENTLY_OFF_USERS.has(userName)) return true;
+    return isUserOffDB(userName, date);
+  }, [isUserOffDB]);
+  const setUserOffDay = useCallback(async (userName, date, isOff, reason) => {
+    if (PERMANENTLY_OFF_USERS.has(userName)) return;
+    return setUserOffDayDB(userName, date, isOff, reason);
+  }, [setUserOffDayDB]);
 
   // ✅ FASTER: Enhanced app ready check
   useEffect(() => {
@@ -1162,6 +1172,19 @@ function AppContent() {
                   </button>
                 ))}
               </div>
+            </div>
+
+            <div className="category-legend" style={{ display: 'none' }}>
+              {[
+                { label: 'Production', gradient: '#0267ff' },
+                { label: 'Design',     gradient: '#FF7B00' },
+                { label: 'SP',         gradient: '#e91e63' },
+              ].map(({ label, gradient }) => (
+                <div key={label} className="legend-item">
+                  <span className="legend-swatch" style={{ background: gradient }} />
+                  <span className="legend-label">{label}</span>
+                </div>
+              ))}
             </div>
           </div>
 

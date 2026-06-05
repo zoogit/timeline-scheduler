@@ -79,28 +79,23 @@ const SHIFT_WINDOWS = {
 
 };
 
-const ACCENT_COLORS = [
-  '#ff6b6b',
-  '#fca311',
-  '#6a994e',
-  '#3d5a80',
-  '#8e44ad',
-  '#00b4d8',
-  '#ef476f',
-  '#ffd166',
-  '#06d6a0',
-  '#118ab2',
-  '#e74c3c',
-  '#f39c12',
-  '#27ae60',
-  '#2980b9',
-  '#9b59b6',
-  '#1abc9c',
-  '#e67e22',
-  '#34495e',
-  '#f1c40f',
-  '#e91e63',
-];
+const CATEGORY_MAIN_COLORS = {
+  production: '#0267ff',
+  design:     '#FF7B00',
+  sp:         '#e91e63',
+};
+const SPECIAL_COLOR = '#374151';
+
+function lightenColor(hex, percent) {
+  const r = parseInt(hex.slice(1, 3), 16);
+  const g = parseInt(hex.slice(3, 5), 16);
+  const b = parseInt(hex.slice(5, 7), 16);
+  const f = percent / 100;
+  const nr = Math.round(r + (255 - r) * f);
+  const ng = Math.round(g + (255 - g) * f);
+  const nb = Math.round(b + (255 - b) * f);
+  return `#${nr.toString(16).padStart(2, '0')}${ng.toString(16).padStart(2, '0')}${nb.toString(16).padStart(2, '0')}`;
+}
 
 function UserTimeline({
   user,
@@ -160,16 +155,6 @@ function UserTimeline({
   const isSpecialTicketType = (ticket) => {
     return ['break', 'meeting', 'training'].includes(ticket.type);
   };
-
-  // Utility function
-  function hashCode(str) {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      hash = (hash << 5) - hash + str.charCodeAt(i);
-      hash |= 0;
-    }
-    return hash;
-  }
 
   // ✅ FIXED: Check if a ticket is clipped (extends beyond shift window)
   const isTicketClipped = (block, index) => {
@@ -1358,14 +1343,9 @@ function UserTimeline({
           const isBreak = block?.isBreak;
           const isSpace = block?.isSpace;
           const isClipped = isTicketClipped(block, index);
-          const colorKey =
-            block?.ticket?.color_key || block?.ticket?.ticket || '';
-          const accentColor =
-            !isBreak && !isSpace && block
-              ? ACCENT_COLORS[
-                  Math.abs(hashCode(colorKey)) % ACCENT_COLORS.length
-                ]
-              : null;
+          const mainColor =
+            CATEGORY_MAIN_COLORS[block?.ticket?.category?.toLowerCase()] ||
+            CATEGORY_MAIN_COLORS.production;
 
           // Use proper off-shift detection for hasContent
           const hasContent = block && !isOffShift;
@@ -1399,8 +1379,17 @@ function UserTimeline({
             justifyContent: 'center',
             position: 'relative',
           };
-          if (!isBreak && !isSpace && accentColor) {
-            cellStyle.backgroundColor = accentColor;
+          if (!isBreak && !isSpace && block?.isTicketContent) {
+            if (block.isFirstBlock) {
+              cellStyle.backgroundColor = mainColor;
+              cellStyle.color = 'white';
+            } else {
+              cellStyle.backgroundColor = lightenColor(mainColor, 55);
+              cellStyle.color = mainColor;
+            }
+          }
+          if (isBreak) {
+            cellStyle.backgroundColor = SPECIAL_COLOR;
           }
           if (isSpace) {
             cellStyle.backgroundColor = '#f0f0f0';
