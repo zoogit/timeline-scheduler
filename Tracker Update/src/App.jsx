@@ -41,7 +41,6 @@ const TEAMS = {
   Day: [
     'Claire',
     'Gabrielle',
-    'Jane',
     'Nousha',
     'Paulina',
     'Stephanie',
