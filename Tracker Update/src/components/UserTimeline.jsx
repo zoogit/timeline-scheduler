@@ -29,7 +29,6 @@ const SHIFT_WINDOWS = {
   // Claire, Gabrielle, Jane, Paulina, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
   Claire: { start: 16, end: 32 }, // 8am-4pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
-  Jane: { start: 16, end: 34 }, // 8am-4pm PST
   Paulina: { start: 16, end: 34 }, // 8am-4pm PST
   Toby: { start: 16, end: 32 }, // 8am-4pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
