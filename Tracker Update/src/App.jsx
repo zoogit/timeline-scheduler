@@ -66,6 +66,40 @@ const VIEW_ALL_TEAM_CONFIG = {
   Night: { startHour: 11, startIndexOffset: 26 },
 };
 
+const COLOR_THEME_STORAGE_KEY = 'timelineSchedulerColorTheme';
+
+const COLOR_THEME_OPTIONS = [
+  {
+    id: 'classic',
+    label: 'Classic',
+    colors: {
+      production: '#0267ff',
+      design: '#FF7B00',
+      sp: '#e91e63',
+    },
+  },
+  {
+    id: 'harbor',
+    label: 'Harbor',
+    colors: {
+      production: '#1d4ed8',
+      design: '#0f766e',
+      sp: '#7c3aed',
+    },
+  },
+  {
+    id: 'civic',
+    label: 'Civic',
+    colors: {
+      production: '#075985',
+      design: '#15803d',
+      sp: '#9f1239',
+    },
+  },
+];
+
+const DEFAULT_COLOR_THEME_ID = COLOR_THEME_OPTIONS[0].id;
+
 // Helper functions - memoized to prevent recalculation
 const getLocalDateString = () => {
   const now = new Date();
@@ -387,6 +421,17 @@ function AppContent() {
   const [blockCount, setBlockCount] = useState(18);
   const [forceRenderKey, setForceRenderKey] = useState(0);
   const [timezone, setTimezone] = useState('PST');
+  const [colorThemeId, setColorThemeId] = useState(() => {
+    try {
+      const storedTheme = localStorage.getItem(COLOR_THEME_STORAGE_KEY);
+      return COLOR_THEME_OPTIONS.some((theme) => theme.id === storedTheme)
+        ? storedTheme
+        : DEFAULT_COLOR_THEME_ID;
+    } catch (error) {
+      return DEFAULT_COLOR_THEME_ID;
+    }
+  });
+  const [showColorThemeMenu, setShowColorThemeMenu] = useState(false);
 
   // ✅ OPTIMIZED: Loading state management
   const [appReady, setAppReady] = useState(false);
@@ -394,6 +439,7 @@ function AppContent() {
 
   // Refs for optimistic updates
   const placingTicketIdRef = useRef(null);
+  const colorThemeMenuRef = useRef(null);
   const [pendingUpdates, setPendingUpdates] = useState(new Set());
 
   // Use database-backed off days
@@ -416,7 +462,40 @@ function AppContent() {
     return setUserOffDayDB(userName, date, isOff, reason);
   }, [setUserOffDayDB]);
 
+  const selectedColorTheme =
+    COLOR_THEME_OPTIONS.find((theme) => theme.id === colorThemeId) ||
+    COLOR_THEME_OPTIONS[0];
+  const categoryColorStyle = {
+    '--production-color': selectedColorTheme.colors.production,
+    '--design-color': selectedColorTheme.colors.design,
+    '--sp-color': selectedColorTheme.colors.sp,
+  };
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(COLOR_THEME_STORAGE_KEY, colorThemeId);
+    } catch (error) {
+      console.warn('Unable to save color theme preference:', error);
+    }
+  }, [colorThemeId]);
+
   // ✅ FASTER: Enhanced app ready check
+  useEffect(() => {
+    if (!showColorThemeMenu) return;
+
+    const handleClickOutside = (event) => {
+      if (!colorThemeMenuRef.current?.contains(event.target)) {
+        setShowColorThemeMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showColorThemeMenu]);
+
   useEffect(() => {
     // More permissive ready state - don't wait for everything
     const ready =
@@ -943,7 +1022,7 @@ function AppContent() {
   const showOffDaysWarning = offDaysError && !offDaysLoading;
 
   return (
-    <div className="app-container">
+    <div className="app-container" style={categoryColorStyle}>
       {/* App Header with User Controls */}
       <div
         className="app-header"
@@ -1173,17 +1252,71 @@ function AppContent() {
               </div>
             </div>
 
-            <div className="category-legend" style={{ display: 'none' }}>
-              {[
-                { label: 'Production', gradient: '#0267ff' },
-                { label: 'Design',     gradient: '#FF7B00' },
-                { label: 'SP',         gradient: '#e91e63' },
-              ].map(({ label, gradient }) => (
-                <div key={label} className="legend-item">
-                  <span className="legend-swatch" style={{ background: gradient }} />
-                  <span className="legend-label">{label}</span>
-                </div>
-              ))}
+            <div
+              className="color-theme-picker"
+              ref={colorThemeMenuRef}
+              aria-label="Timeline color theme"
+            >
+              <button
+                type="button"
+                className={`color-theme-trigger ${
+                  showColorThemeMenu ? 'active' : ''
+                }`}
+                onClick={() => setShowColorThemeMenu((isOpen) => !isOpen)}
+                title={`Colors: ${selectedColorTheme.label}`}
+                aria-label={`Colors: ${selectedColorTheme.label}`}
+                aria-expanded={showColorThemeMenu}
+              >
+                <svg
+                  className="color-theme-trigger-icon"
+                  aria-hidden="true"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="m14.5 4.5 5 5" />
+                  <path d="M13 6 4 15l-1 5 5-1 9-9" />
+                  <path d="m16 3 5 5" />
+                </svg>
+              </button>
+
+              <div
+                className={`color-theme-menu ${
+                  showColorThemeMenu ? 'open' : ''
+                }`}
+                aria-hidden={!showColorThemeMenu}
+              >
+                {COLOR_THEME_OPTIONS.map((theme) => (
+                  <button
+                    key={theme.id}
+                    type="button"
+                    className={`color-theme-btn ${
+                      colorThemeId === theme.id ? 'active' : ''
+                    }`}
+                    onClick={() => {
+                      setColorThemeId(theme.id);
+                      setShowColorThemeMenu(false);
+                    }}
+                    title={`${theme.label} colors`}
+                    aria-label={`${theme.label} colors`}
+                    aria-pressed={colorThemeId === theme.id}
+                    tabIndex={showColorThemeMenu ? 0 : -1}
+                  >
+                    <span className="color-theme-swatches" aria-hidden="true">
+                      {['production', 'design', 'sp'].map((category) => (
+                        <span
+                          key={category}
+                          className="color-theme-swatch"
+                          style={{ background: theme.colors[category] }}
+                        />
+                      ))}
+                    </span>
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
@@ -1239,6 +1372,7 @@ function AppContent() {
                         applyOptimisticUpdate={applyOptimisticUpdate}
                         isUserOff={isUserOff}
                         setUserOffDay={setUserOffDay}
+                        categoryColors={selectedColorTheme.colors}
                         // ✅ CLEAN: Pass simple boolean permissions
                         canEdit={canEdit}
                         canDelete={canDelete}
@@ -1274,6 +1408,7 @@ function AppContent() {
                     applyOptimisticUpdate={applyOptimisticUpdate}
                     isUserOff={isUserOff}
                     setUserOffDay={setUserOffDay}
+                    categoryColors={selectedColorTheme.colors}
                     // ✅ CLEAN: Pass simple boolean permissions
                     canEdit={canEdit}
                     canDelete={canDelete}

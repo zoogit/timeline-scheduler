@@ -7,11 +7,11 @@ import supabase from '../supabaseClient';
 // GMT to PDT conversion: GMT - 7 hours = PDT (US on PDT, UK still on GMT — DST gap Mar 8–Mar 29)
 const SHIFT_WINDOWS = {
   // London Team - Convert GMT times to PDT (GMT - 7 hours)
-  // Andrew, Mitchell, Nicole, Solveiga: 8AM-4:30PM GMT = 1AM-9:30AM PDT (2-19)
-  Andrew: { start: 0, end: 17 }, // 12am-8:30am PST (8am-4:30pm GMT)
-  Mitchell: { start: 0, end: 17 }, // 12am-8:30am PST (8am-4:30pm GMT)
-  Nicole: { start: 0, end: 17 }, // 12am-8:30am PST (8am-4:30pm GMT)
-  Solveiga: { start: 0, end: 17 }, // 12am-8:30am PST (8am-4:30pm GMT)
+  // Andrew, Mitchell, Nicole, Solveiga: 12AM-8AM PST
+  Andrew: { start: 0, end: 16 }, // 12am-8am PST
+  Mitchell: { start: 0, end: 16 }, // 12am-8am PST
+  Nicole: { start: 0, end: 16 }, // 12am-8am PST
+  Solveiga: { start: 0, end: 16 }, // 12am-8am PST
 
   // Karen, Kristina: 2PM-10PM GMT = 6AM-2PM PST
   Karen: { start: 12, end: 28 }, // 6am-2pm PST
@@ -26,17 +26,18 @@ const SHIFT_WINDOWS = {
   Simona: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
-  // Claire, Gabrielle, Jane, Paulina, Toby: 4PM-12AM GMT = 8AM-4PM PST (16-32)
-  Claire: { start: 16, end: 32 }, // 8am-4pm PST
+  // Claire, Toby: 6AM-2PM PST
+  // Gabrielle, Paulina: 8AM-5PM PST
+  Claire: { start: 12, end: 28 }, // 6am-2pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
   Paulina: { start: 16, end: 34 }, // 8am-4pm PST
-  Toby: { start: 16, end: 32 }, // 8am-4pm PST
+  Toby: { start: 12, end: 28 }, // 6am-2pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
-  // Stephanie, Susan, Victoria: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
+  // Stephanie, Susan: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
   Stephanie: { start: 12, end: 30 }, // 6:30am-3pm PST
   Susan: { start: 12, end: 30 }, // 6:30am-3pm PST
-  Victoria: { start: 13, end: 29 }, // 6:30am-3pm PST
+  Victoria: { start: 13, end: 23 }, // 8:30am-1:30pm CST = 6:30am-11:30am PST
 
   // Night Team - Convert GMT times to PST (GMT - 8 hours)
   // Ashley: 9PM GMT-6AM GMT = 1PM PST-10PM PST (26-44)
@@ -67,18 +68,18 @@ const SHIFT_WINDOWS = {
   Isidora: { start: 22, end: 40 },
   'Cover 3': { start: 21, end: 40 },
 
-  // James: 9AM-5:30PM GMT = 2AM-10:30AM PDT - London-based
-  James: { start: 2, end: 20 }, // 2am-10:30am PDT
+  // James: 1AM-9AM PST - London-based
+  James: { start: 2, end: 18 }, // 1am-9am PST
 
   // Lisa: 1AM-8:30AM PST (2-18) - Early morning coverage
   Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
 
-  // Sophia: 8AM-4:30PM GMT = 1AM-9:30AM PDT - London-based
-  Sophia: { start: 0, end: 18 }, // 1am-9:30am PDT
+  // Sophia: 12AM-8AM PST - London-based
+  Sophia: { start: 0, end: 16 }, // 12am-8am PST
 
 };
 
-const CATEGORY_MAIN_COLORS = {
+const DEFAULT_CATEGORY_COLORS = {
   production: '#0267ff',
   design:     '#FF7B00',
   sp:         '#e91e63',
@@ -115,6 +116,7 @@ function UserTimeline({
   canDelete = false,
   canManageTeam = false,
   isCoverSlot = false,
+  categoryColors = DEFAULT_CATEGORY_COLORS,
 }) {
   console.log(
     '🚀 UserTimeline loaded for:',
@@ -1343,8 +1345,9 @@ function UserTimeline({
           const isSpace = block?.isSpace;
           const isClipped = isTicketClipped(block, index);
           const mainColor =
-            CATEGORY_MAIN_COLORS[block?.ticket?.category?.toLowerCase()] ||
-            CATEGORY_MAIN_COLORS.production;
+            categoryColors[block?.ticket?.category?.toLowerCase()] ||
+            DEFAULT_CATEGORY_COLORS[block?.ticket?.category?.toLowerCase()] ||
+            DEFAULT_CATEGORY_COLORS.production;
 
           // Use proper off-shift detection for hasContent
           const hasContent = block && !isOffShift;
