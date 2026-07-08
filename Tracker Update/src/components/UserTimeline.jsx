@@ -559,6 +559,7 @@ function UserTimeline({
   // Handle regular ticket drops
   const handleTicketDrop = async (ticket, dropIndex) => {
     const actualStartIndex = isViewAll ? dropIndex : dropIndex + globalOffset;
+    const newLength = (ticket.estimate || 1) * 2;
 
     console.log(
       `🎫 Regular ticket drop: ${ticket.ticket} at position ${actualStartIndex}`
@@ -605,7 +606,87 @@ function UserTimeline({
       }
     }
 
-    const newLength = (ticket.estimate || 1) * 2;
+    const splitTarget = tickets.find((existingTicket) => {
+      if (
+        existingTicket.id === ticket.id ||
+        existingTicket.type === 'break' ||
+        existingTicket.assigned_user !== user ||
+        existingTicket.date !== selectedDate ||
+        existingTicket.start_index === null
+      ) {
+        return false;
+      }
+
+      const existingEnd =
+        existingTicket.start_index + (existingTicket.estimate || 1) * 2;
+      return (
+        actualStartIndex > existingTicket.start_index &&
+        actualStartIndex < existingEnd
+      );
+    });
+
+    let continuationTicket = null;
+    let originalSplitEstimate = null;
+
+    if (splitTarget) {
+      const leadingBlocks = actualStartIndex - splitTarget.start_index;
+      const totalBlocks = (splitTarget.estimate || 1) * 2;
+      const remainingBlocks = totalBlocks - leadingBlocks;
+
+      originalSplitEstimate = splitTarget.estimate;
+
+      const continuationData = {
+        ticket: `${splitTarget.ticket} (Continued)`,
+        estimate: remainingBlocks / 2,
+        original_estimate: splitTarget.original_estimate || splitTarget.estimate,
+        link: splitTarget.link || '',
+        type: splitTarget.type || 'normal',
+        category: splitTarget.category,
+        assigned_user: user,
+        start_index: actualStartIndex + newLength,
+        date: selectedDate,
+        color_key: splitTarget.color_key || splitTarget.ticket,
+        is_turnover: true,
+      };
+
+      const { data: insertedContinuation, error: continuationError } =
+        await supabase
+          .from('tickets')
+          .insert([continuationData])
+          .select()
+          .single();
+
+      if (continuationError) {
+        console.error(
+          'Failed to create the continued ticket:',
+          continuationError.message
+        );
+        alert('The ticket could not be split. No schedule changes were made.');
+        return;
+      }
+
+      continuationTicket = insertedContinuation;
+
+      const { error: splitError } = await supabase
+        .from('tickets')
+        .update({ estimate: leadingBlocks / 2 })
+        .eq('id', splitTarget.id);
+
+      if (splitError) {
+        await supabase
+          .from('tickets')
+          .delete()
+          .eq('id', continuationTicket.id);
+        console.error('Failed to shorten the split ticket:', splitError.message);
+        alert('The ticket could not be split. No schedule changes were made.');
+        return;
+      }
+
+      applyOptimisticUpdate(splitTarget.id, {
+        estimate: leadingBlocks / 2,
+      });
+      setTickets((prev) => [...prev, continuationTicket]);
+    }
 
     // Apply change instantly to UI
     applyOptimisticUpdate(ticket.id, {
@@ -627,7 +708,10 @@ function UserTimeline({
       )
       .sort((a, b) => a.start_index - b.start_index);
 
-    let shiftStart = actualStartIndex + newLength;
+    let shiftStart =
+      actualStartIndex +
+      newLength +
+      (continuationTicket ? continuationTicket.estimate * 2 : 0);
 
     // Shift existing tickets with optimistic updates
     for (const t of shiftingTickets) {
@@ -665,6 +749,23 @@ function UserTimeline({
       // Also rollback shifted tickets if any
       for (const t of shiftingTickets) {
         applyOptimisticUpdate(t.id, { start_index: t.start_index });
+      }
+
+      if (continuationTicket && splitTarget) {
+        await supabase
+          .from('tickets')
+          .update({ estimate: originalSplitEstimate })
+          .eq('id', splitTarget.id);
+        await supabase
+          .from('tickets')
+          .delete()
+          .eq('id', continuationTicket.id);
+        applyOptimisticUpdate(splitTarget.id, {
+          estimate: originalSplitEstimate,
+        });
+        setTickets((prev) =>
+          prev.filter((existing) => existing.id !== continuationTicket.id)
+        );
       }
     } else {
       setPlacingTicketId(ticket.id);
