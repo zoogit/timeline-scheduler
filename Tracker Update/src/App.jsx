@@ -42,7 +42,6 @@ const TEAMS = {
     'Claire',
     'Gabrielle',
     'Nousha',
-    'Paulina',
     'Stephanie',
     'Susan',
     'Toby',

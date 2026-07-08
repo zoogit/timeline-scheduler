@@ -27,10 +27,9 @@ const SHIFT_WINDOWS = {
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
   // Claire, Toby: 6AM-2PM PST
-  // Gabrielle, Paulina: 8AM-5PM PST
+  // Gabrielle: 8AM-5PM PST
   Claire: { start: 12, end: 28 }, // 6am-2pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
-  Paulina: { start: 16, end: 34 }, // 8am-4pm PST
   Toby: { start: 12, end: 28 }, // 6am-2pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
