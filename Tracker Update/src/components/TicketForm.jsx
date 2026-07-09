@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
+import { SPECIAL_TICKETS, getSpecialTicket } from '../constants/specialTickets';
 
 function TicketForm({ tickets, setTickets, selectedDate }) {
   const [ticket, setTicket] = useState('');
@@ -126,13 +127,14 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
 
   const handleAddSpecial = async (label) => {
     console.log('🟣 Adding special ticket to persistent lobby:', label);
+    const specialTicket = getSpecialTicket(label);
 
     // ✅ FIXED: Include original_estimate for special tickets too
     const specialTicketData = {
       ticket: label,
       link: '', // Ensure link is not null
-      estimate: 0.5,
-      original_estimate: 0.5, // ✅ ADD this required field
+      estimate: specialTicket.duration,
+      original_estimate: specialTicket.duration, // ✅ ADD this required field
       type: 'break',
       assigned_user: null,
       start_index: null,
@@ -245,9 +247,18 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
       <div className="dropdown">
         <button className="dropbtn">Add Special</button>
         <div className="dropdown-content">
-          <div onClick={() => handleAddSpecial('Break')}>Break</div>
-          <div onClick={() => handleAddSpecial('Meeting')}>Meeting</div>
-          <div onClick={() => handleAddSpecial('Training')}>Training</div>
+          {SPECIAL_TICKETS.map((specialTicket) => (
+            <div
+              key={specialTicket.label}
+              onClick={() => handleAddSpecial(specialTicket.label)}
+            >
+              <span
+                className="special-ticket-swatch"
+                style={{ backgroundColor: specialTicket.color }}
+              />
+              {specialTicket.label}
+            </div>
+          ))}
         </div>
       </div>
     </div>

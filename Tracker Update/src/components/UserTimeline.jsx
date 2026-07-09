@@ -6,6 +6,7 @@ import {
   recordScheduleMove,
   validateSchedule,
 } from '../utils/scheduleDiagnostics';
+import { getSpecialTicket } from '../constants/specialTickets';
 
 // ✅ UPDATED: Corrected SHIFT_WINDOWS based on GMT times converted to PDT
 // Each position = 30 minutes, 0 = midnight PDT
@@ -87,8 +88,6 @@ const DEFAULT_CATEGORY_COLORS = {
   design:     '#FF7B00',
   sp:         '#e91e63',
 };
-const SPECIAL_COLOR = '#374151';
-
 function lightenColor(hex, percent) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -120,6 +119,7 @@ function UserTimeline({
   canManageTeam = false,
   isCoverSlot = false,
   categoryColors = DEFAULT_CATEGORY_COLORS,
+  recordUndoAction,
 }) {
   console.log(
     '🚀 UserTimeline loaded for:',
@@ -243,7 +243,7 @@ function UserTimeline({
     console.log('✅ Simple break insertion');
 
     const specialData = {
-      ticket: dragData.type,
+      ticket: dragData.ticket || dragData.type,
       estimate: dragData.estimate || 0.5,
       original_estimate: dragData.estimate || 0.5,
       link: '',
@@ -252,7 +252,7 @@ function UserTimeline({
       assigned_user: user,
       start_index: actualStartIndex,
       date: selectedDate,
-      color_key: dragData.type,
+      color_key: dragData.ticket || dragData.type,
       is_turnover: false,
     };
 
@@ -1349,12 +1349,30 @@ function UserTimeline({
   const handleDragStart = (e, timelineSlot) => {
     if (!timelineSlot) return;
 
+    if (timelineSlot.isSpace && timelineSlot.spaceBreak) {
+      const specialTicket = timelineSlot.spaceBreak;
+      console.log(`Dragging embedded special: "${specialTicket.ticket}"`);
+
+      e.dataTransfer.setData(
+        'application/json',
+        JSON.stringify({
+          ...specialTicket,
+          isSpecial: true,
+          type: 'break',
+        })
+      );
+
+      dragTicketIdRef.current = specialTicket.id;
+      dragTicketEstimateRef.current = (specialTicket.estimate || 0.5) * 2;
+      return;
+    }
+
     const ticket = timelineSlot.ticket;
     console.log(
       `🚀 DRAG START: "${ticket.ticket}" (type: ${ticket.type || 'normal'})`
     );
 
-    if (timelineSlot.isSpace || timelineSlot.elongatedTicket) {
+    if (timelineSlot.elongatedTicket) {
       // Dragging an elongated ticket (with or without spaces)
       console.log(
         `🕳️ Dragging elongated ticket - will remove spaces and return to original duration`
@@ -1425,6 +1443,23 @@ function UserTimeline({
   // ✅ CLEAN: Enhanced drop handling with permission checks
   const handleDrop = async (e) => {
     e.preventDefault();
+    const beforeDropTickets = tickets.map((ticket) => ({ ...ticket }));
+
+    const captureUndoAction = async (label) => {
+      if (!recordUndoAction) return;
+
+      const { data, error } = await supabase
+        .from('tickets')
+        .select('*')
+        .or(`date.eq.${selectedDate},date.is.null`);
+
+      if (error) {
+        console.warn('Could not create an undo snapshot:', error.message);
+        return;
+      }
+
+      recordUndoAction(label, beforeDropTickets, data || []);
+    };
 
     if (!canEdit) {
       console.log('❌ User cannot drag and drop tickets');
@@ -1465,6 +1500,7 @@ function UserTimeline({
     if (isLobbyDrop) {
       console.log('🏠 LOBBY DROP: Processing...');
       await handleLobbyDrop(dragData);
+      await captureUndoAction(`Return ${dragData.ticket} to lobby`);
       clearHoverRange();
       return;
     }
@@ -1485,6 +1521,7 @@ function UserTimeline({
       await handleTicketDrop(dragData, dropIndex);
     }
 
+    await captureUndoAction(`Move ${dragData.ticket || dragData.type}`);
     clearHoverRange();
   };
 
@@ -1659,11 +1696,16 @@ function UserTimeline({
             }
           }
           if (isBreak) {
-            cellStyle.backgroundColor = SPECIAL_COLOR;
+            cellStyle.backgroundColor = getSpecialTicket(
+              block.ticket.ticket
+            ).color;
           }
           if (isSpace) {
-            cellStyle.backgroundColor = '#f0f0f0';
-            cellStyle.border = '2px dashed #999';
+            const specialColor = getSpecialTicket(
+              block.spaceBreak?.ticket
+            ).color;
+            cellStyle.backgroundColor = lightenColor(specialColor, 82);
+            cellStyle.border = `2px dashed ${specialColor}`;
           }
 
           return (

@@ -66,6 +66,46 @@ const VIEW_ALL_TEAM_CONFIG = {
   Night: { startHour: 11, startIndexOffset: 26 },
 };
 
+const LONDON_SHIFT_START_INDEX = {
+  Andrew: 0,
+  Mitchell: 0,
+  Nicole: 0,
+  Solveiga: 0,
+  Sophia: 0,
+  Andrei: 2,
+  Bella: 2,
+  Emma: 2,
+  Goldee: 2,
+  James: 2,
+  Jo: 2,
+  Lisa: 2,
+  Simona: 2,
+  Claire: 12,
+  Karen: 12,
+  Kristina: 12,
+  Toby: 12,
+};
+
+const getTeamUsers = (teamKey) => {
+  const users = TEAMS[teamKey] || [];
+
+  if (teamKey !== 'London') {
+    return users;
+  }
+
+  return [...users].sort((left, right) => {
+    const leftStart = LONDON_SHIFT_START_INDEX[left] ?? Number.MAX_SAFE_INTEGER;
+    const rightStart =
+      LONDON_SHIFT_START_INDEX[right] ?? Number.MAX_SAFE_INTEGER;
+
+    if (leftStart !== rightStart) {
+      return leftStart - rightStart;
+    }
+
+    return left.localeCompare(right);
+  });
+};
+
 const COLOR_THEME_STORAGE_KEY = 'timelineSchedulerColorTheme';
 
 const COLOR_THEME_OPTIONS = [
@@ -99,6 +139,25 @@ const COLOR_THEME_OPTIONS = [
 ];
 
 const DEFAULT_COLOR_THEME_ID = COLOR_THEME_OPTIONS[0].id;
+
+const getUndoTicketState = (ticket) => ({
+  id: ticket.id,
+  ticket: ticket.ticket,
+  estimate: ticket.estimate,
+  original_estimate: ticket.original_estimate,
+  link: ticket.link,
+  type: ticket.type,
+  category: ticket.category,
+  assigned_user: ticket.assigned_user,
+  start_index: ticket.start_index,
+  date: ticket.date,
+  color_key: ticket.color_key,
+  is_turnover: ticket.is_turnover,
+});
+
+const ticketStatesMatch = (left, right) =>
+  JSON.stringify(getUndoTicketState(left)) ===
+  JSON.stringify(getUndoTicketState(right));
 
 // Helper functions - memoized to prevent recalculation
 const getLocalDateString = () => {
@@ -432,6 +491,8 @@ function AppContent() {
     }
   });
   const [showColorThemeMenu, setShowColorThemeMenu] = useState(false);
+  const [undoAction, setUndoAction] = useState(null);
+  const [isUndoing, setIsUndoing] = useState(false);
 
   // ✅ OPTIMIZED: Loading state management
   const [appReady, setAppReady] = useState(false);
@@ -530,7 +591,7 @@ function AppContent() {
   }, [selectedDate, selectedTeam]);
 
   // Calculate display values
-  const USERS = TEAMS[selectedTeam] || [];
+  const USERS = getTeamUsers(selectedTeam);
   const { startHour, blockCount: teamBlockCount } = SHIFT_CONFIG[
     selectedTeam
   ] || { startHour: 0, blockCount: 18 };
@@ -646,6 +707,100 @@ function AppContent() {
       });
     }, 1000);
   }, []);
+
+  const recordUndoAction = useCallback((label, beforeTickets, afterTickets) => {
+    const beforeById = new Map(beforeTickets.map((ticket) => [ticket.id, ticket]));
+    const afterById = new Map(afterTickets.map((ticket) => [ticket.id, ticket]));
+    const affectedIds = new Set([...beforeById.keys(), ...afterById.keys()]);
+    const changedIds = [...affectedIds].filter((ticketId) => {
+      const before = beforeById.get(ticketId);
+      const after = afterById.get(ticketId);
+      return !before || !after || !ticketStatesMatch(before, after);
+    });
+
+    if (changedIds.length === 0) return;
+
+    setUndoAction({
+      label,
+      before: changedIds
+        .map((ticketId) => beforeById.get(ticketId))
+        .filter(Boolean),
+      after: changedIds
+        .map((ticketId) => afterById.get(ticketId))
+        .filter(Boolean),
+      affectedIds: changedIds,
+    });
+  }, []);
+
+  const handleUndo = async () => {
+    if (!undoAction || isUndoing) return;
+    setIsUndoing(true);
+
+    try {
+      const { data: currentRows, error: currentError } = await supabase
+        .from('tickets')
+        .select('*')
+        .in('id', undoAction.affectedIds);
+
+      if (currentError) throw currentError;
+
+      const currentById = new Map(
+        (currentRows || []).map((ticket) => [ticket.id, ticket])
+      );
+      const afterById = new Map(
+        undoAction.after.map((ticket) => [ticket.id, ticket])
+      );
+      const hasConflict = undoAction.affectedIds.some((ticketId) => {
+        const current = currentById.get(ticketId);
+        const expected = afterById.get(ticketId);
+        return (!current && expected) || (current && !expected) ||
+          (current && expected && !ticketStatesMatch(current, expected));
+      });
+
+      if (hasConflict) {
+        alert(
+          'Undo was not applied because one of the affected tickets changed after your action.'
+        );
+        return;
+      }
+
+      const beforeIds = new Set(
+        undoAction.before.map((ticket) => ticket.id)
+      );
+      const createdIds = undoAction.after
+        .filter((ticket) => !beforeIds.has(ticket.id))
+        .map((ticket) => ticket.id);
+
+      if (createdIds.length > 0) {
+        const { error: deleteError } = await supabase
+          .from('tickets')
+          .delete()
+          .in('id', createdIds);
+        if (deleteError) throw deleteError;
+      }
+
+      if (undoAction.before.length > 0) {
+        const { error: restoreError } = await supabase
+          .from('tickets')
+          .upsert(undoAction.before);
+        if (restoreError) throw restoreError;
+      }
+
+      const { data: refreshed, error: refreshError } = await supabase
+        .from('tickets')
+        .select('*')
+        .or(`date.eq.${selectedDate},date.is.null`);
+      if (refreshError) throw refreshError;
+
+      setTickets(refreshed || []);
+      setUndoAction(null);
+    } catch (error) {
+      console.error('Undo failed:', error);
+      alert(`Undo failed: ${error.message}`);
+    } finally {
+      setIsUndoing(false);
+    }
+  };
 
   const setPlacingTicketId = useCallback((ticketId) => {
     placingTicketIdRef.current = ticketId;
@@ -770,7 +925,11 @@ function AppContent() {
   const timelineData = useMemo(() => {
     const data = {};
     const currentUsers = viewAll
-      ? [...TEAMS.London, ...TEAMS.Day, ...TEAMS.Night]
+      ? [
+          ...getTeamUsers('London'),
+          ...getTeamUsers('Day'),
+          ...getTeamUsers('Night'),
+        ]
       : USERS;
 
     // Initialize timeline arrays for each user
@@ -1263,6 +1422,27 @@ function AppContent() {
               </div>
             </div>
 
+            {!isTeamMember && (
+              <button
+                className="undo-button undo-button-ribbon"
+                onClick={handleUndo}
+                disabled={!undoAction || isUndoing}
+                title={
+                  undoAction
+                    ? `Undo: ${undoAction.label}`
+                    : 'Nothing to undo'
+                }
+                aria-label={
+                  undoAction
+                    ? `Undo ${undoAction.label}`
+                    : 'Nothing to undo'
+                }
+              >
+                <span aria-hidden="true">↶</span>
+                {isUndoing ? 'Undoing' : 'Undo'}
+              </button>
+            )}
+
             <div
               className="color-theme-picker"
               ref={colorThemeMenuRef}
@@ -1335,7 +1515,7 @@ function AppContent() {
           <div className="timeline-scroll-container">
             {viewAll ? (
               ['London', 'Day', 'Night'].map((teamKey) => {
-                const USERS = TEAMS[teamKey];
+                const USERS = getTeamUsers(teamKey);
                 const teamConfig = VIEW_ALL_TEAM_CONFIG[teamKey];
                 const teamStart = teamConfig.startIndexOffset;
                 const teamBlocks = SHIFT_CONFIG[teamKey].blockCount;
@@ -1388,6 +1568,7 @@ function AppContent() {
                         canEdit={canEdit}
                         canDelete={canDelete}
                         canManageTeam={canManageTeam}
+                        recordUndoAction={recordUndoAction}
                       />
                     ))}
                   </div>
@@ -1424,6 +1605,7 @@ function AppContent() {
                     canEdit={canEdit}
                     canDelete={canDelete}
                     canManageTeam={canManageTeam}
+                    recordUndoAction={recordUndoAction}
                     isCoverSlot={user.startsWith('Cover ')}
                   />
                 ))}
