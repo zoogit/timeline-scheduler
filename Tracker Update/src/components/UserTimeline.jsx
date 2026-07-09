@@ -13,9 +13,11 @@ const SHIFT_WINDOWS = {
   Nicole: { start: 0, end: 16 }, // 12am-8am PST
   Solveiga: { start: 0, end: 16 }, // 12am-8am PST
 
-  // Karen, Kristina: 2PM-10PM GMT = 6AM-2PM PST
+  // Claire, Karen, Kristina, Toby: 2PM-10PM GMT = 6AM-2PM PST
+  Claire: { start: 12, end: 28 }, // 6am-2pm PST
   Karen: { start: 12, end: 28 }, // 6am-2pm PST
   Kristina: { start: 12, end: 28 }, // 6am-2pm PST
+  Toby: { start: 12, end: 28 }, // 6am-2pm PST
 
   // Andrei, Bella, Emma, Goldee, Jo, Simona: 9AM-4:30PM GMT = 1AM-8:30AM PST
   Andrei: { start: 2, end: 18 }, // 1am-8:30am PST
@@ -26,11 +28,8 @@ const SHIFT_WINDOWS = {
   Simona: { start: 2, end: 18 }, // 1am-8:30am PST
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
-  // Claire, Toby: 6AM-2PM PST
   // Gabrielle: 8AM-5PM PST
-  Claire: { start: 12, end: 28 }, // 6am-2pm PST
   Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
-  Toby: { start: 12, end: 28 }, // 6am-2pm PST
   Nousha: { start: 16, end: 34 }, // 8am-5pm PST
 
   // Stephanie, Susan: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
