@@ -1,6 +1,11 @@
 import React, { useState, useRef, useMemo } from 'react';
 import '../styles.css';
 import supabase from '../supabaseClient';
+import {
+  getScheduleSnapshot,
+  recordScheduleMove,
+  validateSchedule,
+} from '../utils/scheduleDiagnostics';
 
 // ✅ UPDATED: Corrected SHIFT_WINDOWS based on GMT times converted to PDT
 // Each position = 30 minutes, 0 = midnight PDT
@@ -555,10 +560,115 @@ function UserTimeline({
       .eq('id', dragData.id);
   };
 
+  const consolidateAdjacentSplitTickets = async () => {
+    const { data, error } = await supabase
+      .from('tickets')
+      .select('*')
+      .eq('assigned_user', user)
+      .eq('date', selectedDate)
+      .not('start_index', 'is', null);
+
+    if (error) {
+      console.warn('Could not consolidate split tickets:', error.message);
+      return;
+    }
+
+    const scheduled = [...(data || [])].sort(
+      (a, b) => a.start_index - b.start_index
+    );
+
+    for (let index = 0; index < scheduled.length - 1; ) {
+      const current = scheduled[index];
+      const next = scheduled[index + 1];
+      const currentEnd =
+        current.start_index + (current.estimate || 1) * 2;
+      const sameSplitFamily =
+        current.type !== 'break' &&
+        next.type !== 'break' &&
+        current.color_key &&
+        current.color_key === next.color_key &&
+        (current.is_turnover || next.is_turnover);
+
+      if (sameSplitFamily && currentEnd === next.start_index) {
+        const estimate =
+          (current.estimate || 1) + (next.estimate || 1);
+        const remainsContinuation =
+          Boolean(current.is_turnover) && Boolean(next.is_turnover);
+        const baseName = current.ticket
+          .replace(/(?:\s*\(Continued\))+$/g, '')
+          .trim();
+        const mergedFields = {
+          ticket: remainsContinuation
+            ? `${baseName} (Continued)`
+            : baseName,
+          estimate,
+          original_estimate:
+            current.original_estimate ||
+            next.original_estimate ||
+            estimate,
+          is_turnover: remainsContinuation,
+        };
+
+        const { error: updateError } = await supabase
+          .from('tickets')
+          .update(mergedFields)
+          .eq('id', current.id);
+
+        if (updateError) {
+          console.warn(
+            'Could not merge adjacent split tickets:',
+            updateError.message
+          );
+          index++;
+          continue;
+        }
+
+        const { error: deleteError } = await supabase
+          .from('tickets')
+          .delete()
+          .eq('id', next.id);
+
+        if (deleteError) {
+          await supabase
+            .from('tickets')
+            .update({
+              ticket: current.ticket,
+              estimate: current.estimate,
+              original_estimate: current.original_estimate,
+              is_turnover: current.is_turnover,
+            })
+            .eq('id', current.id);
+          console.warn(
+            'Could not remove merged split ticket:',
+            deleteError.message
+          );
+          index++;
+          continue;
+        }
+
+        scheduled[index] = { ...current, ...mergedFields };
+        scheduled.splice(index + 1, 1);
+        continue;
+      }
+
+      index++;
+    }
+
+    setTickets((prev) => [
+      ...prev.filter(
+        (existing) =>
+          existing.assigned_user !== user || existing.date !== selectedDate
+      ),
+      ...scheduled,
+    ]);
+  };
+
   // Handle regular ticket drops
   const handleTicketDrop = async (ticket, dropIndex) => {
     const actualStartIndex = isViewAll ? dropIndex : dropIndex + globalOffset;
     const newLength = (ticket.estimate || 1) * 2;
+    const operationId = `move-${Date.now()}-${ticket.id}`;
+    const beforeSnapshot = getScheduleSnapshot(tickets, user, selectedDate);
 
     console.log(
       `🎫 Regular ticket drop: ${ticket.ticket} at position ${actualStartIndex}`
@@ -634,8 +744,11 @@ function UserTimeline({
 
       originalSplitEstimate = splitTarget.estimate;
 
+      const continuationBaseName = splitTarget.ticket
+        .replace(/(?:\s*\(Continued\))+$/g, '')
+        .trim();
       const continuationData = {
-        ticket: `${splitTarget.ticket} (Continued)`,
+        ticket: `${continuationBaseName} (Continued)`,
         estimate: remainingBlocks / 2,
         original_estimate: splitTarget.original_estimate || splitTarget.estimate,
         link: splitTarget.link || '',
@@ -684,7 +797,18 @@ function UserTimeline({
       applyOptimisticUpdate(splitTarget.id, {
         estimate: leadingBlocks / 2,
       });
-      setTickets((prev) => [...prev, continuationTicket]);
+      setTickets((prev) => {
+        const exists = prev.some(
+          (existing) => existing.id === continuationTicket.id
+        );
+        return exists
+          ? prev.map((existing) =>
+              existing.id === continuationTicket.id
+                ? continuationTicket
+                : existing
+            )
+          : [...prev, continuationTicket];
+      });
     }
 
     // Apply change instantly to UI
@@ -771,6 +895,51 @@ function UserTimeline({
       console.log(
         `✅ Successfully placed ticket "${ticket.ticket}" at position ${actualStartIndex}`
       );
+
+      await consolidateAdjacentSplitTickets();
+
+      const { data: persistedTickets, error: diagnosticsError } = await supabase
+        .from('tickets')
+        .select('*')
+        .eq('assigned_user', user)
+        .eq('date', selectedDate)
+        .not('start_index', 'is', null);
+
+      if (diagnosticsError) {
+        recordScheduleMove({
+          operationId,
+          status: 'diagnostics-query-failed',
+          ticketId: ticket.id,
+          ticket: ticket.ticket,
+          destination: actualStartIndex,
+          before: beforeSnapshot,
+          error: diagnosticsError.message,
+        });
+        console.warn(
+          `[${operationId}] Could not load the post-move schedule:`,
+          diagnosticsError.message
+        );
+      } else {
+        const afterSnapshot = getScheduleSnapshot(
+          persistedTickets || [],
+          user,
+          selectedDate
+        );
+        const issues = validateSchedule(persistedTickets || []);
+
+        recordScheduleMove({
+          operationId,
+          status: issues.length > 0 ? 'issues-detected' : 'ok',
+          ticketId: ticket.id,
+          ticket: ticket.ticket,
+          destination: actualStartIndex,
+          splitTargetId: splitTarget?.id || null,
+          continuationTicketId: continuationTicket?.id || null,
+          before: beforeSnapshot,
+          after: afterSnapshot,
+          issues,
+        });
+      }
     }
   };
 

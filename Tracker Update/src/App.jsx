@@ -19,6 +19,7 @@ import ExportButton from './components/ExportButton';
 import ResourceLinkBanner from './components/ResourceLinkBanner';
 import supabase from './supabaseClient';
 import './styles.css';
+import { reportScheduleIssues } from './utils/scheduleDiagnostics';
 
 const TEAMS = {
   London: [
@@ -585,7 +586,14 @@ function AppContent() {
           }
 
           if (payload.eventType === 'INSERT') {
-            setTickets((prev) => [...prev, payload.new]);
+            setTickets((prev) => {
+              const exists = prev.some((ticket) => ticket.id === payload.new.id);
+              return exists
+                ? prev.map((ticket) =>
+                    ticket.id === payload.new.id ? payload.new : ticket
+                  )
+                : [...prev, payload.new];
+            });
           } else if (payload.eventType === 'UPDATE') {
             setTickets((prev) =>
               prev.map((t) => (t.id === payload.new.id ? payload.new : t))
@@ -601,6 +609,10 @@ function AppContent() {
 
     return () => supabase.removeChannel(channel);
   }, [isAuthenticated, pendingUpdates]);
+
+  useEffect(() => {
+    reportScheduleIssues(tickets, 'ticket state changed');
+  }, [tickets]);
 
   // Optimistic update functions
   const applyOptimisticUpdate = useCallback((ticketId, updatedFields) => {

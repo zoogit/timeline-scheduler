@@ -486,7 +486,11 @@ function TicketLobby({
     
     // Find groups with multiple tickets that should be merged
     for (const [baseName, group] of Object.entries(ticketGroups)) {
-      if (group.length > 1) {
+      const turnoverTickets = group.filter(
+        ticket => ticket.is_turnover || isTurnoverTicket(ticket.ticket)
+      );
+
+      if (group.length > 1 && turnoverTickets.length > 0) {
         // Removed the broken console.error line here! 👍
         
         // Sort: originals first, then turnovers
@@ -494,8 +498,14 @@ function TicketLobby({
           // ...sorting logic...
         });
     
-        const targetTicket = group[0];
-        const sourceTickets = group.slice(1);
+        const targetTicket =
+          group.find(
+            ticket =>
+              !ticket.is_turnover && !isTurnoverTicket(ticket.ticket)
+          ) || turnoverTickets[0];
+        const sourceTickets = turnoverTickets.filter(
+          ticket => ticket.id !== targetTicket.id
+        );
     
         for (const sourceTicket of sourceTickets) {
           try {
