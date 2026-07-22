@@ -1,5 +1,5 @@
 const getTicketEnd = (ticket) =>
-  ticket.start_index + (ticket.estimate || 1) * 2;
+  ticket.start_index + Math.max(1, Math.ceil((ticket.estimate || 1) * 2));
 
 export const getScheduleSnapshot = (tickets, user, date) =>
   tickets

@@ -88,6 +88,16 @@ const DEFAULT_CATEGORY_COLORS = {
   design:     '#FF7B00',
   sp:         '#e91e63',
 };
+
+const getTicketCategory = (ticket) =>
+  ticket?.category || (ticket?.type === 'break' ? 'Special' : 'Production');
+
+const getTicketBlockCount = (estimate, fallback = 1) =>
+  Math.max(1, Math.ceil((estimate || fallback) * 2));
+
+const getTimelineEstimate = (estimate, fallback = 1) =>
+  getTicketBlockCount(estimate, fallback) / 2;
+
 function lightenColor(hex, percent) {
   const r = parseInt(hex.slice(1, 3), 16);
   const g = parseInt(hex.slice(3, 5), 16);
@@ -171,21 +181,12 @@ function UserTimeline({
 
     const ticket = block.ticket;
     const ticketStart = ticket.start_index; // This is already in global coordinates
-    const ticketDuration = (ticket.estimate || 1) * 2;
+    const ticketDuration = getTicketBlockCount(ticket.estimate);
     const ticketEnd = ticketStart + ticketDuration;
 
     // Get user's shift window in global coordinates (SHIFT_WINDOWS already has global positions)
     const userShiftWindow = SHIFT_WINDOWS[user] || { start: 0, end: 48 };
     const globalShiftEnd = userShiftWindow.end; // This is already global, no offset needed
-
-    console.log(`🔍 CLIP CHECK for ${user}:`, {
-      ticket: ticket.ticket,
-      ticketStart,
-      ticketEnd,
-      globalShiftEnd,
-      userShiftWindow,
-      isClipped: ticketEnd > globalShiftEnd,
-    });
 
     return ticketEnd > globalShiftEnd;
   };
@@ -208,7 +209,7 @@ function UserTimeline({
 
     const affectedTickets = userTickets.filter((ticket) => {
       const ticketStart = ticket.start_index;
-      const ticketEnd = ticketStart + ticket.estimate * 2;
+      const ticketEnd = ticketStart + getTicketBlockCount(ticket.estimate);
 
       // Check if break overlaps with ticket
       const overlaps = ticketStart < breakEnd && ticketEnd > breakStart;
@@ -229,7 +230,7 @@ function UserTimeline({
 
   const calculateSpacesInTicket = (ticket, breakStart, breakEnd) => {
     const ticketStart = ticket.start_index;
-    const ticketEnd = ticketStart + ticket.estimate * 2;
+    const ticketEnd = ticketStart + getTicketBlockCount(ticket.estimate);
 
     // Calculate overlap
     const overlapStart = Math.max(ticketStart, breakStart);
@@ -396,7 +397,7 @@ function UserTimeline({
       return;
     }
 
-    const currentEstimate = ticket.estimate || 1;
+    const currentEstimate = getTimelineEstimate(ticket.estimate);
     const adjustment = direction === 'increase' ? 0.5 : -0.5;
     const newEstimate = Math.max(0.5, currentEstimate + adjustment);
 
@@ -514,9 +515,11 @@ function UserTimeline({
         }
 
         const breakStart = breakTicket.start_index;
-        const breakEnd = breakStart + breakTicket.estimate * 2;
+        const breakEnd =
+          breakStart + getTicketBlockCount(breakTicket.estimate, 0.5);
         const ticketStart = dragData.start_index;
-        const ticketEnd = ticketStart + dragData.estimate * 2;
+        const ticketEnd =
+          ticketStart + getTicketBlockCount(dragData.estimate);
 
         // Check if break overlaps with the original ticket timespan
         return breakStart < ticketEnd && breakEnd > ticketStart;
@@ -581,7 +584,8 @@ function UserTimeline({
       const current = scheduled[index];
       const next = scheduled[index + 1];
       const currentEnd =
-        current.start_index + (current.estimate || 1) * 2;
+        current.start_index + getTicketBlockCount(current.estimate);
+      const nextEnd = next.start_index + getTicketBlockCount(next.estimate);
       const sameSplitFamily =
         current.type !== 'break' &&
         next.type !== 'break' &&
@@ -589,9 +593,9 @@ function UserTimeline({
         current.color_key === next.color_key &&
         (current.is_turnover || next.is_turnover);
 
-      if (sameSplitFamily && currentEnd === next.start_index) {
-        const estimate =
-          (current.estimate || 1) + (next.estimate || 1);
+      if (sameSplitFamily && currentEnd >= next.start_index) {
+        const mergedEnd = Math.max(currentEnd, nextEnd);
+        const estimate = (mergedEnd - current.start_index) / 2;
         const remainsContinuation =
           Boolean(current.is_turnover) && Boolean(next.is_turnover);
         const baseName = current.ticket
@@ -666,7 +670,7 @@ function UserTimeline({
   // Handle regular ticket drops
   const handleTicketDrop = async (ticket, dropIndex) => {
     const actualStartIndex = isViewAll ? dropIndex : dropIndex + globalOffset;
-    const newLength = (ticket.estimate || 1) * 2;
+    const newLength = getTicketBlockCount(ticket.estimate);
     const operationId = `move-${Date.now()}-${ticket.id}`;
     const beforeSnapshot = getScheduleSnapshot(tickets, user, selectedDate);
 
@@ -689,9 +693,11 @@ function UserTimeline({
         }
 
         const breakStart = breakTicket.start_index;
-        const breakEnd = breakStart + breakTicket.estimate * 2;
+        const breakEnd =
+          breakStart + getTicketBlockCount(breakTicket.estimate, 0.5);
         const ticketStart = ticket.start_index;
-        const ticketEnd = ticketStart + ticket.estimate * 2;
+        const ticketEnd =
+          ticketStart + getTicketBlockCount(ticket.estimate);
 
         // Check if break overlaps with the original ticket timespan
         return breakStart < ticketEnd && breakEnd > ticketStart;
@@ -727,7 +733,7 @@ function UserTimeline({
       }
 
       const existingEnd =
-        existingTicket.start_index + (existingTicket.estimate || 1) * 2;
+        existingTicket.start_index + getTicketBlockCount(existingTicket.estimate);
       return (
         actualStartIndex > existingTicket.start_index &&
         actualStartIndex < existingEnd
@@ -739,7 +745,7 @@ function UserTimeline({
 
     if (splitTarget) {
       const leadingBlocks = actualStartIndex - splitTarget.start_index;
-      const totalBlocks = (splitTarget.estimate || 1) * 2;
+      const totalBlocks = getTicketBlockCount(splitTarget.estimate);
       const remainingBlocks = totalBlocks - leadingBlocks;
 
       originalSplitEstimate = splitTarget.estimate;
@@ -753,7 +759,7 @@ function UserTimeline({
         original_estimate: splitTarget.original_estimate || splitTarget.estimate,
         link: splitTarget.link || '',
         type: splitTarget.type || 'normal',
-        category: splitTarget.category,
+        category: getTicketCategory(splitTarget),
         assigned_user: user,
         start_index: actualStartIndex + newLength,
         date: selectedDate,
@@ -834,11 +840,13 @@ function UserTimeline({
     let shiftStart =
       actualStartIndex +
       newLength +
-      (continuationTicket ? continuationTicket.estimate * 2 : 0);
+      (continuationTicket
+        ? getTicketBlockCount(continuationTicket.estimate)
+        : 0);
 
     // Shift existing tickets with optimistic updates
     for (const t of shiftingTickets) {
-      const length = (t.estimate || 1) * 2;
+      const length = getTicketBlockCount(t.estimate);
       console.log(
         `  📤 Shifting ticket "${t.ticket}" from ${t.start_index} to ${shiftStart}`
       );
@@ -946,7 +954,7 @@ function UserTimeline({
   // New space-based break insertion system
   const handleSpaceBasedBreakInsertion = async (dragData, dropIndex) => {
     const actualStartIndex = isViewAll ? dropIndex : dropIndex + globalOffset;
-    const durationBlocks = (dragData.estimate || 0.5) * 2;
+    const durationBlocks = getTicketBlockCount(dragData.estimate, 0.5);
     const endIndex = actualStartIndex + durationBlocks;
 
     console.log(
@@ -998,7 +1006,7 @@ function UserTimeline({
 
     const ticket = timelineSlot.ticket;
     const ticketStart = ticket.start_index; // Global coordinates
-    const ticketDuration = (ticket.estimate || 1) * 2;
+    const ticketDuration = getTicketBlockCount(ticket.estimate);
     const ticketEnd = ticketStart + ticketDuration;
 
     // Get user's shift window in global coordinates (SHIFT_WINDOWS already has global positions)
@@ -1050,7 +1058,8 @@ function UserTimeline({
         }
 
         const breakStart = breakTicket.start_index;
-        const breakEnd = breakStart + breakTicket.estimate * 2;
+        const breakEnd =
+          breakStart + getTicketBlockCount(breakTicket.estimate, 0.5);
 
         // Check if break overlaps with the original ticket timespan
         return breakStart < ticketEnd && breakEnd > ticketStart;
@@ -1095,7 +1104,7 @@ function UserTimeline({
         original_estimate: overflowHours, // This should be in hours
         link: ticket.link || '',
         type: ticket.type || 'normal',
-        category: ticket.category,
+        category: getTicketCategory(ticket),
         assigned_user: null, // Goes to lobby
         start_index: null, // Goes to lobby
         date: null, // Persistent lobby
@@ -1186,7 +1195,7 @@ function UserTimeline({
 
     // Process each ticket and calculate its elongated timeline with spaces
     userTickets.forEach((ticket) => {
-      const baseEstimate = (ticket.estimate || 1) * 2;
+      const baseEstimate = getTicketBlockCount(ticket.estimate);
       const globalStartIndex = ticket.start_index;
       const localStartIndex = isViewAll
         ? globalStartIndex
@@ -1201,7 +1210,8 @@ function UserTimeline({
       // Find breaks that intersect with this ticket
       const intersectingBreaks = userBreaks.filter((breakTicket) => {
         const breakStart = breakTicket.start_index;
-        const breakEnd = breakStart + breakTicket.estimate * 2;
+        const breakEnd =
+          breakStart + getTicketBlockCount(breakTicket.estimate, 0.5);
         const ticketEnd = globalStartIndex + baseEstimate;
 
         // Check if break overlaps with ticket's original timespan
@@ -1218,7 +1228,8 @@ function UserTimeline({
 
       // Calculate total duration including spaces
       const totalSpacesDuration = intersectingBreaks.reduce(
-        (sum, breakTicket) => sum + breakTicket.estimate * 2,
+        (sum, breakTicket) =>
+          sum + getTicketBlockCount(breakTicket.estimate, 0.5),
         0
       );
 
@@ -1241,7 +1252,8 @@ function UserTimeline({
           // Check if there's a break at this global position
           const breakAtThisPosition = intersectingBreaks.find((breakTicket) => {
             const breakStart = breakTicket.start_index;
-            const breakEnd = breakStart + breakTicket.estimate * 2;
+            const breakEnd =
+              breakStart + getTicketBlockCount(breakTicket.estimate, 0.5);
             return (
               currentGlobalPos >= breakStart && currentGlobalPos < breakEnd
             );
@@ -1287,7 +1299,7 @@ function UserTimeline({
 
     // Now place standalone breaks (those not creating spaces)
     userBreaks.forEach((breakTicket) => {
-      const breakDuration = (breakTicket.estimate || 0.5) * 2;
+      const breakDuration = getTicketBlockCount(breakTicket.estimate, 0.5);
       const breakGlobalIndex = breakTicket.start_index;
       const breakLocalIndex = isViewAll
         ? breakGlobalIndex
@@ -1296,7 +1308,7 @@ function UserTimeline({
       // Check if this break is creating spaces or is standalone
       const isCreatingSpaces = userTickets.some((ticket) => {
         const ticketStart = ticket.start_index;
-        const ticketEnd = ticketStart + ticket.estimate * 2;
+        const ticketEnd = ticketStart + getTicketBlockCount(ticket.estimate);
         return (
           breakGlobalIndex < ticketEnd &&
           breakGlobalIndex + breakDuration > ticketStart
@@ -1363,7 +1375,10 @@ function UserTimeline({
       );
 
       dragTicketIdRef.current = specialTicket.id;
-      dragTicketEstimateRef.current = (specialTicket.estimate || 0.5) * 2;
+      dragTicketEstimateRef.current = getTicketBlockCount(
+        specialTicket.estimate,
+        0.5
+      );
       return;
     }
 
@@ -1406,7 +1421,10 @@ function UserTimeline({
       );
 
       dragTicketIdRef.current = ticket.id;
-      dragTicketEstimateRef.current = (ticket.estimate || 0.5) * 2;
+      dragTicketEstimateRef.current = getTicketBlockCount(
+        ticket.estimate,
+        0.5
+      );
     } else {
       // Normal ticket drag (no elongation)
       console.log(`📋 Normal ticket drag: "${ticket.ticket}"`);
@@ -1419,7 +1437,7 @@ function UserTimeline({
       );
 
       dragTicketIdRef.current = ticket.id;
-      dragTicketEstimateRef.current = (ticket.estimate || 1) * 2;
+      dragTicketEstimateRef.current = getTicketBlockCount(ticket.estimate);
     }
   };
 

@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import supabase from '../supabaseClient';
 import { SPECIAL_TICKETS, getSpecialTicket } from '../constants/specialTickets';
 
+const normalizeEstimate = (value) =>
+  Math.max(0.5, Math.ceil((Number(value) || 0.5) * 2) / 2);
+
 function TicketForm({ tickets, setTickets, selectedDate }) {
   const [ticket, setTicket] = useState('');
   const [link, setLink] = useState('');
@@ -13,6 +16,8 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
       alert('Please fill out Ticket #, Estimate, and Category.');
       return;
     }
+
+    const normalizedEstimate = normalizeEstimate(estimate);
 
     console.log('🎫 CREATING NEW TICKET:', {
       ticket,
@@ -27,8 +32,8 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
     const newTicketData = {
       ticket,
       link: link || '', // Ensure link is never null
-      estimate,
-      original_estimate: estimate, // ✅ ADD this required field
+      estimate: normalizedEstimate,
+      original_estimate: normalizedEstimate, // ✅ ADD this required field
       assigned_user: null,
       start_index: null,
       type: 'normal',
