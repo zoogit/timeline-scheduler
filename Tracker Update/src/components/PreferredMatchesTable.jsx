@@ -67,9 +67,9 @@ function PreferredMatchesTable({ userRole, userId }) {
       setRows(data || []);
     } catch (loadError) {
       setError(
-        'Preferred Matches could not load. The database table may still need to be created.'
+        'Need a table? could not load. The database table may still need to be created.'
       );
-      console.error('Preferred Matches load failed:', loadError);
+      console.error('Need a table? load failed:', loadError);
     } finally {
       setLoading(false);
     }
@@ -222,7 +222,7 @@ function PreferredMatchesTable({ userRole, userId }) {
         onClick={() => setIsOpen((current) => !current)}
         aria-expanded={isOpen}
       >
-        <span>Preferred Matches</span>
+        <span>Need a table?</span>
         <span className="preferred-matches-toggle-meta">
           {isOpen ? 'Hide' : 'Open'}
         </span>
@@ -232,9 +232,9 @@ function PreferredMatchesTable({ userRole, userId }) {
         <div className="preferred-matches-panel">
           <div className="preferred-matches-toolbar">
             <div>
-              <div className="preferred-matches-title">Client match tracker</div>
+              <div className="preferred-matches-title">Need a table?</div>
               <div className="preferred-matches-subtitle">
-                Preferred caller and designer pairings
+                Caller and designer pairings
               </div>
             </div>
             <div className="preferred-matches-actions">
