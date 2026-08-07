@@ -15,8 +15,8 @@ import TicketForm from './components/TicketForm';
 import TicketLobby from './components/TicketLobby';
 import TimelineHeader from './components/TimelineHeader';
 import UserTimeline from './components/UserTimeline';
-import ExportButton from './components/ExportButton';
 import ResourceLinkBanner from './components/ResourceLinkBanner';
+import PreferredMatchesTable from './components/PreferredMatchesTable';
 import supabase from './supabaseClient';
 import './styles.css';
 import { reportScheduleIssues } from './utils/scheduleDiagnostics';
@@ -444,6 +444,7 @@ function AppContent() {
     userName,
     userTeam,
     userProfile,
+    user,
   } = useAuth();
 
   // ✅ CLEAN: Derive permission flags from the three valid roles
@@ -849,131 +850,6 @@ function AppContent() {
 
     setSelectedDate(newDateString);
   };
-
-  // ✅ CLEAN: Clear All function - Only managers
-  const handleClearAll = async () => {
-    if (!isManager) {
-      alert(
-        'You do not have permission to clear all tickets. Only managers can perform this action.'
-      );
-      return;
-    }
-
-    const confirmMessage = `Are you sure you want to clear ALL tickets for ${selectedDate}?\n\nThis will:\n- Remove all assigned tickets from timelines\n- Send them back to the lobby\n- This action cannot be undone\n\nType "CLEAR" to confirm:`;
-
-    const userInput = prompt(confirmMessage);
-
-    if (userInput !== 'CLEAR') {
-      return;
-    }
-
-    try {
-      const assignedTickets = tickets.filter(
-        (t) =>
-          t.assigned_user && t.start_index !== null && t.date === selectedDate
-      );
-
-      if (assignedTickets.length === 0) {
-        alert('No assigned tickets found for this date.');
-        return;
-      }
-
-      // Apply optimistic updates first
-      assignedTickets.forEach((ticket) => {
-        applyOptimisticUpdate(ticket.id, {
-          assigned_user: null,
-          start_index: null,
-          date: null,
-        });
-      });
-
-      // Update database
-      const { error } = await supabase
-        .from('tickets')
-        .update({
-          assigned_user: null,
-          start_index: null,
-          date: null,
-        })
-        .in(
-          'id',
-          assignedTickets.map((t) => t.id)
-        );
-
-      if (error) {
-        console.error('❌ Error clearing tickets:', error);
-        // Rollback optimistic updates
-        assignedTickets.forEach((ticket) => {
-          applyOptimisticUpdate(ticket.id, {
-            assigned_user: ticket.assigned_user,
-            start_index: ticket.start_index,
-            date: ticket.date,
-          });
-        });
-        alert('Failed to clear tickets. Please try again.');
-      } else {
-        alert(
-          `Successfully cleared ${assignedTickets.length} tickets for ${selectedDate}`
-        );
-      }
-    } catch (error) {
-      console.error('❌ Error in handleClearAll:', error);
-      alert('An error occurred while clearing tickets. Please try again.');
-    }
-  };
-
-  const timelineData = useMemo(() => {
-    const data = {};
-    const currentUsers = viewAll
-      ? [
-          ...getTeamUsers('London'),
-          ...getTeamUsers('Day'),
-          ...getTeamUsers('Night'),
-        ]
-      : USERS;
-
-    // Initialize timeline arrays for each user
-    currentUsers.forEach((user) => {
-      data[user] = Array(viewAll ? 48 : blockCount).fill(null);
-    });
-
-    // Place assigned tickets on timeline
-    const assignedTickets = tickets.filter(
-      (t) =>
-        t.assigned_user && t.start_index !== null && t.date === selectedDate
-    );
-
-    assignedTickets.forEach((ticket) => {
-      const duration = Math.ceil((ticket.estimate || 1) * 2);
-      const startIndex = viewAll
-        ? ticket.start_index
-        : ticket.start_index - globalOffset;
-
-      if (data[ticket.assigned_user]) {
-        for (let i = 0; i < duration; i++) {
-          const index = startIndex + i;
-          if (index >= 0 && index < data[ticket.assigned_user].length) {
-            data[ticket.assigned_user][index] = {
-              ticket: ticket.ticket,
-              user: ticket.assigned_user,
-              type: ticket.type || 'normal',
-            };
-          }
-        }
-      }
-    });
-
-    return data;
-  }, [
-    tickets,
-    selectedDate,
-    selectedTeam,
-    viewAll,
-    globalOffset,
-    blockCount,
-    USERS,
-    forceRenderKey,
-  ]);
 
   // Today comparison helper
   const isToday = (dateString) => {
@@ -1617,24 +1493,7 @@ function AppContent() {
         {/* ✅ CLEAN: Bottom Controls - Hide for team members */}
         {!isTeamMember && (
           <div className="bottom-controls">
-            <ExportButton
-              timelineData={timelineData}
-              startHour={startHour}
-              blockCount={blockCount}
-            />
-
-            {/* ✅ CLEAN: Clear All Button - Only for managers */}
-            {isManager && (
-              <div className="clear-all-container">
-                <button
-                  className="clear-all-button"
-                  onClick={handleClearAll}
-                  title={`Clear all tickets for ${selectedDate}`}
-                >
-                  Clear All ({selectedDate})
-                </button>
-              </div>
-            )}
+            <PreferredMatchesTable userRole={userRole} userId={user?.id} />
           </div>
         )}
 
