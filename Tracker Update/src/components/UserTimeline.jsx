@@ -62,8 +62,8 @@ const SHIFT_WINDOWS = {
 
   // Weekend Team - GMT times, converted to PST (GMT - 8h). 0 = midnight PST.
   // Timeline window: 4am–7pm PST (globalOffset=8, blockCount=30)
-  // Lam + Cover 1: 12pm–6pm GMT = 4am–10am PST (blocks 8–20)
-  Lam: { start: 8, end: 28 },
+  // Lam: 12pm–8pm GMT = 4am–12pm PST (blocks 8–24)
+  Lam: { start: 8, end: 24 },
   'Cover 1': { start: 8, end: 28 },
   // Sendrine + Cover 2: 5pm–1am GMT = 9am–5pm PST (blocks 18–34); Cover 2 ends 2am GMT = 6pm PST (36)
   Sendrine: { start: 18, end: 34 },
