@@ -1,6 +1,130 @@
 const getTicketEnd = (ticket) =>
   ticket.start_index + Math.max(1, Math.ceil((ticket.estimate || 1) * 2));
 
+const DIAGNOSTIC_STORAGE_KEY = 'timelineSchedulerDiagnostics';
+const MAX_DIAGNOSTIC_EVENTS = 80;
+
+const safeReadStoredEvents = () => {
+  if (typeof window === 'undefined') return [];
+
+  try {
+    const rawEvents = window.localStorage.getItem(DIAGNOSTIC_STORAGE_KEY);
+    const parsedEvents = rawEvents ? JSON.parse(rawEvents) : [];
+    return Array.isArray(parsedEvents) ? parsedEvents : [];
+  } catch (error) {
+    return [];
+  }
+};
+
+const safeWriteStoredEvents = (events) => {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.setItem(
+      DIAGNOSTIC_STORAGE_KEY,
+      JSON.stringify(events.slice(-MAX_DIAGNOSTIC_EVENTS))
+    );
+  } catch (error) {
+    // Diagnostic logging should never interrupt scheduling.
+  }
+};
+
+export const recordDiagnosticEvent = (event) => {
+  const normalizedEvent = {
+    at: new Date().toISOString(),
+    ...event,
+  };
+
+  if (typeof window !== 'undefined') {
+    const history = window.__timelineDiagnostics || safeReadStoredEvents();
+    const nextHistory = [...history, normalizedEvent].slice(-MAX_DIAGNOSTIC_EVENTS);
+    window.__timelineDiagnostics = nextHistory;
+    safeWriteStoredEvents(nextHistory);
+  }
+
+  return normalizedEvent;
+};
+
+export const buildDiagnosticReport = ({
+  selectedDate,
+  selectedTeam,
+  viewAll,
+  timezone,
+  userRole,
+  canEdit,
+  ticketCount,
+  lobbyTicketCount,
+  scheduleIssueCount,
+}) => {
+  const storedEvents = safeReadStoredEvents();
+  const memoryEvents =
+    typeof window !== 'undefined' ? window.__timelineDiagnostics || [] : [];
+  const moveDiagnostics =
+    typeof window !== 'undefined' ? window.__scheduleMoveDiagnostics || [] : [];
+  const events = (memoryEvents.length > 0 ? memoryEvents : storedEvents).slice(
+    -MAX_DIAGNOSTIC_EVENTS
+  );
+
+  const report = {
+    createdAt: new Date().toISOString(),
+    app: {
+      selectedDate,
+      selectedTeam,
+      viewAll,
+      timezone,
+      userRole,
+      canEdit,
+      ticketCount,
+      lobbyTicketCount,
+      scheduleIssueCount,
+    },
+    browser:
+      typeof window !== 'undefined'
+        ? {
+            userAgent: window.navigator.userAgent,
+            online: window.navigator.onLine,
+            language: window.navigator.language,
+            viewport: {
+              width: window.innerWidth,
+              height: window.innerHeight,
+            },
+          }
+        : null,
+    recentEvents: events,
+    recentMoves: moveDiagnostics,
+  };
+
+  return JSON.stringify(report, null, 2);
+};
+
+export const installDiagnosticListeners = () => {
+  if (typeof window === 'undefined' || window.__timelineDiagnosticListeners) {
+    return;
+  }
+
+  window.__timelineDiagnosticListeners = true;
+
+  window.addEventListener('error', (event) => {
+    recordDiagnosticEvent({
+      type: 'browser-error',
+      message: event.message,
+      source: event.filename,
+      line: event.lineno,
+      column: event.colno,
+    });
+  });
+
+  window.addEventListener('unhandledrejection', (event) => {
+    recordDiagnosticEvent({
+      type: 'unhandled-promise',
+      message:
+        event.reason?.message ||
+        event.reason?.error_description ||
+        String(event.reason),
+    });
+  });
+};
+
 export const getScheduleSnapshot = (tickets, user, date) =>
   tickets
     .filter(
@@ -104,6 +228,11 @@ export const reportScheduleIssues = (tickets, source) => {
 };
 
 export const recordScheduleMove = (record) => {
+  recordDiagnosticEvent({
+    type: 'schedule-move',
+    ...record,
+  });
+
   if (typeof window !== 'undefined') {
     const history = window.__scheduleMoveDiagnostics || [];
     window.__scheduleMoveDiagnostics = [...history.slice(-9), record];

@@ -4,6 +4,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import '../styles.css';
 import supabase from '../supabaseClient';
+import { recordDiagnosticEvent } from '../utils/scheduleDiagnostics';
 
 // EstimateEditor component (unchanged)
 const EstimateEditor = ({ ticket, onUpdateEstimate, isUpdating = false }) => {
@@ -575,6 +576,13 @@ function TicketLobby({
             draggable={true}
             onDragStart={(e) => {
               e.dataTransfer.setData("application/json", JSON.stringify(t));
+              recordDiagnosticEvent({
+                type: 'lobby-drag-started',
+                ticketId: t.id,
+                ticket: t.ticket,
+                estimate: t.estimate,
+                category: t.category,
+              });
             }}
             onDragOver={(e) => handleDragOver(e, t)}
             onDragEnter={(e) => handleDragEnter(e, t)}

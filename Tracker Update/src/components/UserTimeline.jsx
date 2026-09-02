@@ -3,6 +3,7 @@ import '../styles.css';
 import supabase from '../supabaseClient';
 import {
   getScheduleSnapshot,
+  recordDiagnosticEvent,
   recordScheduleMove,
   validateSchedule,
 } from '../utils/scheduleDiagnostics';
@@ -673,6 +674,28 @@ function UserTimeline({
     const newLength = getTicketBlockCount(ticket.estimate);
     const operationId = `move-${Date.now()}-${ticket.id}`;
     const beforeSnapshot = getScheduleSnapshot(tickets, user, selectedDate);
+    const startedAt = performance.now();
+
+    recordDiagnosticEvent({
+      type: 'ticket-drop-started',
+      operationId,
+      ticketId: ticket.id,
+      ticket: ticket.ticket,
+      destinationUser: user,
+      selectedDate,
+      dropIndex,
+      actualStartIndex,
+      ticketCount: tickets.length,
+      shiftingTicketCount: tickets.filter(
+        (t) =>
+          t.assigned_user === user &&
+          t.start_index !== null &&
+          t.start_index >= actualStartIndex &&
+          t.id !== ticket.id &&
+          t.date === selectedDate &&
+          t.type !== 'break'
+      ).length,
+    });
 
     console.log(
       `🎫 Regular ticket drop: ${ticket.ticket} at position ${actualStartIndex}`
@@ -780,6 +803,12 @@ function UserTimeline({
           continuationError.message
         );
         alert('The ticket could not be split. No schedule changes were made.');
+        recordDiagnosticEvent({
+          type: 'ticket-drop-failed',
+          operationId,
+          step: 'create-continuation',
+          error: continuationError.message,
+        });
         return;
       }
 
@@ -797,6 +826,12 @@ function UserTimeline({
           .eq('id', continuationTicket.id);
         console.error('Failed to shorten the split ticket:', splitError.message);
         alert('The ticket could not be split. No schedule changes were made.');
+        recordDiagnosticEvent({
+          type: 'ticket-drop-failed',
+          operationId,
+          step: 'shorten-split-target',
+          error: splitError.message,
+        });
         return;
       }
 
@@ -851,12 +886,34 @@ function UserTimeline({
         `  📤 Shifting ticket "${t.ticket}" from ${t.start_index} to ${shiftStart}`
       );
       applyOptimisticUpdate(t.id, { start_index: shiftStart });
-      await supabase
+      const { error: shiftError } = await supabase
         .from('tickets')
         .update({ start_index: shiftStart })
         .eq('id', t.id);
+
+      if (shiftError) {
+        recordDiagnosticEvent({
+          type: 'ticket-drop-failed',
+          operationId,
+          step: 'shift-ticket',
+          shiftedTicketId: t.id,
+          shiftedTicket: t.ticket,
+          error: shiftError.message,
+        });
+        console.error('❌ Supabase shift error:', shiftError.message);
+        applyOptimisticUpdate(t.id, { start_index: t.start_index });
+        return;
+      }
+
       shiftStart += length;
     }
+
+    recordDiagnosticEvent({
+      type: 'ticket-drop-shifts-finished',
+      operationId,
+      shiftedTickets: shiftingTickets.length,
+      elapsedMs: Math.round(performance.now() - startedAt),
+    });
 
     // Update database for main ticket assignment
     const { error } = await supabase
@@ -898,11 +955,25 @@ function UserTimeline({
           prev.filter((existing) => existing.id !== continuationTicket.id)
         );
       }
+
+      recordDiagnosticEvent({
+        type: 'ticket-drop-failed',
+        operationId,
+        step: 'assign-ticket',
+        error: error.message,
+        elapsedMs: Math.round(performance.now() - startedAt),
+      });
     } else {
       setPlacingTicketId(ticket.id);
       console.log(
         `✅ Successfully placed ticket "${ticket.ticket}" at position ${actualStartIndex}`
       );
+
+      recordDiagnosticEvent({
+        type: 'ticket-drop-assigned',
+        operationId,
+        elapsedMs: Math.round(performance.now() - startedAt),
+      });
 
       await consolidateAdjacentSplitTickets();
 
@@ -922,6 +993,7 @@ function UserTimeline({
           destination: actualStartIndex,
           before: beforeSnapshot,
           error: diagnosticsError.message,
+          elapsedMs: Math.round(performance.now() - startedAt),
         });
         console.warn(
           `[${operationId}] Could not load the post-move schedule:`,
@@ -946,6 +1018,7 @@ function UserTimeline({
           before: beforeSnapshot,
           after: afterSnapshot,
           issues,
+          elapsedMs: Math.round(performance.now() - startedAt),
         });
       }
     }
@@ -1461,6 +1534,7 @@ function UserTimeline({
   // ✅ CLEAN: Enhanced drop handling with permission checks
   const handleDrop = async (e) => {
     e.preventDefault();
+    e.stopPropagation();
     const beforeDropTickets = tickets.map((ticket) => ({ ...ticket }));
 
     const captureUndoAction = async (label) => {
@@ -1481,6 +1555,11 @@ function UserTimeline({
 
     if (!canEdit) {
       console.log('❌ User cannot drag and drop tickets');
+      recordDiagnosticEvent({
+        type: 'drop-blocked-permission',
+        destinationUser: user,
+        selectedDate,
+      });
       alert(
         'You do not have permission to move tickets. Contact a manager or coordinator.'
       );
@@ -1489,6 +1568,12 @@ function UserTimeline({
     }
 
     console.log('🎯 DROP EVENT TRIGGERED');
+    recordDiagnosticEvent({
+      type: 'drop-event',
+      destinationUser: user,
+      selectedDate,
+      canEdit,
+    });
 
     let dragData;
     try {
@@ -1496,6 +1581,13 @@ function UserTimeline({
       console.log('📦 PARSED DRAG DATA:', dragData);
     } catch (error) {
       console.error('❌ Failed to parse drag data:', error);
+      recordDiagnosticEvent({
+        type: 'drop-parse-failed',
+        destinationUser: user,
+        selectedDate,
+        error: error.message,
+        dataTransferTypes: Array.from(e.dataTransfer?.types || []),
+      });
       return;
     }
 
@@ -1504,6 +1596,12 @@ function UserTimeline({
 
     if (!dragData) {
       console.log('❌ No drag data found - aborting drop');
+      recordDiagnosticEvent({
+        type: 'drop-empty-data',
+        destinationUser: user,
+        selectedDate,
+        dataTransferTypes: Array.from(e.dataTransfer?.types || []),
+      });
       return;
     }
 

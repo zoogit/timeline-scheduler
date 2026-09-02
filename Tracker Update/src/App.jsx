@@ -19,7 +19,12 @@ import ResourceLinkBanner from './components/ResourceLinkBanner';
 import PreferredMatchesTable from './components/PreferredMatchesTable';
 import supabase from './supabaseClient';
 import './styles.css';
-import { reportScheduleIssues } from './utils/scheduleDiagnostics';
+import {
+  buildDiagnosticReport,
+  installDiagnosticListeners,
+  reportScheduleIssues,
+  validateSchedule,
+} from './utils/scheduleDiagnostics';
 
 const TEAMS = {
   London: [
@@ -494,6 +499,7 @@ function AppContent() {
   const [showColorThemeMenu, setShowColorThemeMenu] = useState(false);
   const [undoAction, setUndoAction] = useState(null);
   const [isUndoing, setIsUndoing] = useState(false);
+  const [diagnosticCopyState, setDiagnosticCopyState] = useState('idle');
 
   // ✅ OPTIMIZED: Loading state management
   const [appReady, setAppReady] = useState(false);
@@ -540,6 +546,46 @@ function AppContent() {
       console.warn('Unable to save color theme preference:', error);
     }
   }, [colorThemeId]);
+
+  useEffect(() => {
+    installDiagnosticListeners();
+  }, []);
+
+  const copySupportReport = useCallback(async () => {
+    const issues = validateSchedule(tickets);
+    const report = buildDiagnosticReport({
+      selectedDate,
+      selectedTeam,
+      viewAll,
+      timezone,
+      userRole,
+      canEdit,
+      ticketCount: tickets.length,
+      lobbyTicketCount: tickets.filter(
+        (ticket) => !ticket.assigned_user && ticket.date === null
+      ).length,
+      scheduleIssueCount: issues.length,
+    });
+
+    try {
+      await navigator.clipboard.writeText(report);
+      setDiagnosticCopyState('copied');
+      setTimeout(() => setDiagnosticCopyState('idle'), 2500);
+    } catch (error) {
+      console.error('Could not copy support report:', error);
+      setDiagnosticCopyState('failed');
+      window.prompt('Copy this support report and send it:', report);
+      setTimeout(() => setDiagnosticCopyState('idle'), 2500);
+    }
+  }, [
+    canEdit,
+    selectedDate,
+    selectedTeam,
+    tickets,
+    timezone,
+    userRole,
+    viewAll,
+  ]);
 
   // ✅ FASTER: Enhanced app ready check
   useEffect(() => {
@@ -1385,6 +1431,22 @@ function AppContent() {
                 ))}
               </div>
             </div>
+
+            <button
+              type="button"
+              className={`support-report-button ${
+                diagnosticCopyState === 'copied' ? 'copied' : ''
+              } ${diagnosticCopyState === 'failed' ? 'failed' : ''}`}
+              onClick={copySupportReport}
+              title="Copy support report"
+              aria-label="Copy support report"
+            >
+              {diagnosticCopyState === 'copied'
+                ? 'Copied'
+                : diagnosticCopyState === 'failed'
+                ? 'Copy shown'
+                : 'Help'}
+            </button>
           </div>
 
           {/* Timeline Container */}
