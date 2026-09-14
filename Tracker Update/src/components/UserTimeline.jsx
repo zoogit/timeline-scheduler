@@ -36,8 +36,12 @@ const SHIFT_WINDOWS = {
 
   // Day Team - Convert GMT times to PST (GMT - 8 hours)
   // Gabrielle: 8AM-5PM PST
-  Gabrielle: { start: 16, end: 34 }, // 8am-4pm PST
-  Nousha: { start: 16, end: 34 }, // 8am-5pm PST
+  Gabrielle: { start: 16, end: 34 }, // 8am-5pm PST
+
+  // London-hour coverage now grouped under US Day
+  Sophia: { start: 0, end: 16 }, // 12am-8am PST
+  James: { start: 2, end: 18 }, // 1am-9am PST
+  Lisa: { start: 2, end: 18 }, // 1am-9am PST
 
   // Stephanie, Susan: 2:30PM-11PM GMT = 6:30AM-3PM PST (13-30)
   Stephanie: { start: 12, end: 30 }, // 6:30am-3pm PST
@@ -72,15 +76,6 @@ const SHIFT_WINDOWS = {
   // Isidora + Cover 3: 7pm–3am GMT = 11am–7pm PST (blocks 22–38)
   Isidora: { start: 22, end: 40 },
   'Cover 3': { start: 21, end: 40 },
-
-  // James: 1AM-9AM PST - London-based
-  James: { start: 2, end: 18 }, // 1am-9am PST
-
-  // Lisa: 1AM-8:30AM PST (2-18) - Early morning coverage
-  Lisa: { start: 2, end: 18 }, // 1am-8:30am PST
-
-  // Sophia: 12AM-8AM PST - London-based
-  Sophia: { start: 0, end: 16 }, // 12am-8am PST
 
 };
 

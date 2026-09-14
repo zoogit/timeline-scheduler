@@ -34,24 +34,23 @@ const TEAMS = {
     'Claire',
     'Emma',
     'Goldee',
-    'James',
     'Karen',
     'Kristina',
-    'Lisa',
     'Mitchell',
     'Nicole',
     'Jo',
     'Simona',
     'Solveiga',
-    'Sophia',
     'Toby',
   ],
   Day: [
-    'Gabrielle',
-    'Nousha',
+    'Sophia',
+    'Lisa',
+    'James',
     'Stephanie',
     'Susan',
     'Victoria',
+    'Gabrielle',
   ],
   Night: ['Ashley', 'Doue', 'Danissa', 'Matt', 'Marie', 'Shaida'],
   Weekend: ['Lam', 'Cover 1', 'Sendrine', 'Cover 2', 'Isidora', 'Cover 3'],
@@ -59,7 +58,7 @@ const TEAMS = {
 
 const SHIFT_CONFIG = {
   London: { startHour: 0, blockCount: 28 },
-  Day: { startHour: 6, blockCount: 22 },
+  Day: { startHour: 0, blockCount: 34 },
   Night: { startHour: 11, blockCount: 26 },
   // Weekend: 5am–8pm PDT = 12pm–3am GMT, covers all three weekend shifts
   Weekend: { startHour: 4, blockCount: 30 },
@@ -67,7 +66,7 @@ const SHIFT_CONFIG = {
 
 const VIEW_ALL_TEAM_CONFIG = {
   London: { startHour: 0, startIndexOffset: 0 },
-  Day: { startHour: 6, startIndexOffset: 12 },
+  Day: { startHour: 0, startIndexOffset: 0 },
   Night: { startHour: 11, startIndexOffset: 26 },
 };
 
@@ -76,14 +75,11 @@ const LONDON_SHIFT_START_INDEX = {
   Mitchell: 0,
   Nicole: 0,
   Solveiga: 0,
-  Sophia: 0,
   Andrei: 2,
   Bella: 2,
   Emma: 2,
   Goldee: 2,
-  James: 2,
   Jo: 2,
-  Lisa: 2,
   Simona: 2,
   Claire: 12,
   Karen: 12,
