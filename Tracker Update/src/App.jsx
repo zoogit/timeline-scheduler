@@ -117,6 +117,7 @@ const COLOR_THEME_OPTIONS = [
       production: '#0267ff',
       design: '#FF7B00',
       sp: '#e91e63',
+      dam: '#10b981',
     },
   },
   {
@@ -126,6 +127,7 @@ const COLOR_THEME_OPTIONS = [
       production: '#1d4ed8',
       design: '#0f766e',
       sp: '#7c3aed',
+      dam: '#f59e0b',
     },
   },
   {
@@ -135,6 +137,7 @@ const COLOR_THEME_OPTIONS = [
       production: '#075985',
       design: '#15803d',
       sp: '#9f1239',
+      dam: '#7c3aed',
     },
   },
 ];
@@ -533,6 +536,7 @@ function AppContent() {
     '--production-color': selectedColorTheme.colors.production,
     '--design-color': selectedColorTheme.colors.design,
     '--sp-color': selectedColorTheme.colors.sp,
+    '--dam-color': selectedColorTheme.colors.dam,
   };
 
   useEffect(() => {
@@ -1415,7 +1419,7 @@ function AppContent() {
                     tabIndex={showColorThemeMenu ? 0 : -1}
                   >
                     <span className="color-theme-swatches" aria-hidden="true">
-                      {['production', 'design', 'sp'].map((category) => (
+                      {['production', 'design', 'sp', 'dam'].map((category) => (
                         <span
                           key={category}
                           className="color-theme-swatch"

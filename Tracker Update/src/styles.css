@@ -1185,8 +1185,13 @@ body {
   color: white;
 }
 
+.ticket-block.dam {
+  background-color: var(--dam-color, #10b981);
+  color: white;
+}
+
 .ticket-block.special {
-  background-color: #8a2ecc;
+  background-color: #374151;
   color: white;
 }
 
@@ -1206,6 +1211,12 @@ body {
   background-color: color-mix(in srgb, var(--sp-color, #e91e63) 76%, #111827) !important;
   font-style: italic;
   border: 2px dashed color-mix(in srgb, var(--sp-color, #e91e63) 52%, #111827);
+}
+
+.ticket-block.turnover-dam {
+  background-color: color-mix(in srgb, var(--dam-color, #10b981) 76%, #111827) !important;
+  font-style: italic;
+  border: 2px dashed color-mix(in srgb, var(--dam-color, #10b981) 52%, #111827);
 }
 
 .break-block {
@@ -1600,6 +1611,14 @@ body {
 
 .category-btn.sp.active {
   background-color: var(--sp-color, #e91e63);
+}
+
+.category-btn.dam {
+  background-color: #6c757d;
+}
+
+.category-btn.dam.active {
+  background-color: var(--dam-color, #10b981);
 }
 
 .category-btn:hover:not(.active) {
@@ -2138,7 +2157,8 @@ body {
 /* Additional visual distinction for turnover tickets */
 .ticket-block.turnover-design,
 .ticket-block.turnover-production,
-.ticket-block.turnover-sp {
+.ticket-block.turnover-sp,
+.ticket-block.turnover-dam {
   border-left: 0px solid #ff9800;
 }
 

@@ -245,6 +245,12 @@ function TicketForm({ tickets, setTickets, selectedDate }) {
         >
           SP
         </button>
+        <button
+          className={`category-btn dam ${category === 'DAM' ? 'active' : ''}`}
+          onClick={() => setCategory('DAM')}
+        >
+          DAM
+        </button>
       </div>
 
       <button onClick={handleAdd}>Add Ticket</button>

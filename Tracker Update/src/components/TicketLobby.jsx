@@ -557,14 +557,15 @@ function TicketLobby({
         const isDesign = category === 'design';
         const isProduction = category === 'production';
         const isSP = category === 'sp';
+        const isDAM = category === 'dam';
         const isSpecial = t.type !== 'normal';
         const isDragTarget = dragOverTicket === t.id;
 
         const className = isSpecial
           ? 'special'
           : t.is_turnover
-            ? (isDesign ? 'turnover-design' : isSP ? 'turnover-sp' : 'turnover-production')
-            : (isDesign ? 'design' : isSP ? 'sp' : 'production');
+            ? (isDesign ? 'turnover-design' : isSP ? 'turnover-sp' : isDAM ? 'turnover-dam' : 'turnover-production')
+            : (isDesign ? 'design' : isSP ? 'sp' : isDAM ? 'dam' : 'production');
 
         return (
           <div

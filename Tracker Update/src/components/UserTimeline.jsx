@@ -83,6 +83,7 @@ const DEFAULT_CATEGORY_COLORS = {
   production: '#0267ff',
   design:     '#FF7B00',
   sp:         '#e91e63',
+  dam:        '#10b981',
 };
 
 const getTicketCategory = (ticket) =>
