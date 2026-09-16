@@ -3,7 +3,6 @@
 
 import React, { useState } from 'react';
 import { useAuth } from './AuthContext';
-import HoulihanLokeyLogo from "../../Assets/Houlihan_Lokey_logo.png";
 
 const LoginForm = () => {
   const [isSignUp, setIsSignUp] = useState(false);
@@ -98,14 +97,6 @@ const LoginForm = () => {
   const headerStyle = {
     textAlign: 'center',
     marginBottom: '40px',
-  };
-
-  const logoStyle = {
-    height: '50px',
-    width: 'auto',
-    marginBottom: '24px',
-    filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1))',
-    transition: 'transform 0.3s ease',
   };
 
   const titleStyle = {
@@ -255,11 +246,6 @@ const LoginForm = () => {
             100% { transform: rotate(360deg); }
           }
           
-          /* Logo hover effect */
-          .glass-logo-hover:hover {
-            transform: scale(1.05) rotate(1deg);
-          }
-          
           /* Input focus effects */
           .glass-input-focus:focus {
             border-color: #0267ff !important;
@@ -378,16 +364,6 @@ const LoginForm = () => {
             className="glass-form-container"
           >
             <div style={headerStyle}>
-              <img
-                src={HoulihanLokeyLogo}
-                alt="Houlihan Lokey"
-                style={logoStyle}
-                className="glass-logo-hover"
-                onError={(e) => {
-                  console.error('Logo failed to load:', e);
-                  e.target.style.display = 'none';
-                }}
-              />
               <h2 style={titleStyle} className="glass-form-title">
                 {isSignUp ? 'Get Set Up' : 'Welcome Back'}
               </h2>
